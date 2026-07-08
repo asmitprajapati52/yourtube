@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
+
 const videochema = mongoose.Schema(
   {
     videotitle: { type: String, required: true },
-    filename: { type: String, required: true },
+    filename: { type: String, required: true }, // Ek duplicate hata diya
     filetype: { type: String, required: true },
-    filename: { type: String, required: true },
     filepath: { type: String, required: true },
     filesize: { type: String, required: true },
     videochanel: { type: String, required: true },

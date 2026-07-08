@@ -1,34 +1,51 @@
-"use clinet";
+"use client";
+
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 
-const videos = "/video/vdo.mp4";
 export default function VideoCard({ video }: any) {
+  // Backend URL config setup
+  const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+  let finalVideoPath = video?.filepath || "";
+
+  // Check agar path online internet link (http) hai ya local backend string
+  if (!finalVideoPath.startsWith("http")) {
+    finalVideoPath = `${backendBaseUrl}/${finalVideoPath}`;
+  }
+
   return (
-    <Link href={`/watch/${video?._id}`} className="group">
+    <Link href={`/watch/${video?._id}`} className="group block">
       <div className="space-y-3">
-        <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+        {/* Video Player Box */}
+        <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-200">
           <video
-            src={`${process.env.BACKEND_URL}/${video?.filepath}`}
-            className="object-cover group-hover:scale-105 transition-transform duration-200"
+            src={finalVideoPath}
+            controls
+            preload="metadata"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
           />
-          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 rounded">
+          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-medium px-1.5 py-0.5 rounded z-10">
             10:24
           </div>
         </div>
-        <div className="flex gap-3">
-          <Avatar className="w-9 h-9 flex-shrink-0">
-            <AvatarFallback>{video?.videochanel[0]}</AvatarFallback>
+
+        {/* Channel and Video Details */}
+        <div className="flex gap-3 px-1">
+          <Avatar className="w-9 h-9 flex-shrink-0 border">
+            <AvatarFallback className="bg-gray-200 font-bold text-gray-700">
+              {video?.videochanel ? video.videochanel[0].toUpperCase() : "Y"}
+            </AvatarFallback>
           </Avatar>
+          
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600">
+            <h3 className="font-medium text-sm line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors">
               {video?.videotitle}
             </h3>
-            <p className="text-sm text-gray-600 mt-1">{video?.videochanel}</p>
-            <p className="text-sm text-gray-600">
-              {video?.views.toLocaleString()} views •{" "}
-              {formatDistanceToNow(new Date(video?.createdAt))} ago
+            <p className="text-xs text-gray-500 mt-1 font-medium">{video?.videochanel}</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              {video?.views ? video.views.toLocaleString() : 0} views •{" "}
+              {video?.createdAt ? formatDistanceToNow(new Date(video.createdAt)) : "Just now"} ago
             </p>
           </div>
         </div>

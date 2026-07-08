@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import Videocard from "./videocard";
 import axiosInstance from "@/lib/axiosinstance";
@@ -6,19 +8,17 @@ const Videogrid = () => {
   const [videos, setvideo] = useState<any[]>([]);
   const [loading, setloading] = useState(true);
 
-  // Yeh local data tab chalega jab aapka database connect nahi hoga
+  // 100% Highly Stable Globally Streamable Video Links
   const fallbackVideos = [
     {
       _id: "1",
       videotitle: "Amazing Nature Documentary",
       filename: "nature-doc.mp4",
       filetype: "video/mp4",
-      filepath: "/videos/nature-doc.mp4",
+      filepath: "https://vjs.zencdn.net/v/oceans.mp4",
       filesize: "500MB",
       videochanel: "Nature Channel",
-      Like: 1250,
       views: 45000,
-      uploader: "nature_lover",
       createdAt: new Date().toISOString(),
     },
     {
@@ -26,12 +26,10 @@ const Videogrid = () => {
       videotitle: "Cooking Tutorial: Perfect Pasta",
       filename: "pasta-tutorial.mp4",
       filetype: "video/mp4",
-      filepath: "/videos/pasta-tutorial.mp4",
+      filepath: "https://media.w3.org/2010/05/sintel/trailer_hd.mp4",
       filesize: "300MB",
       videochanel: "Chef's Kitchen",
-      Like: 890,
       views: 23000,
-      uploader: "chef_master",
       createdAt: new Date(Date.now() - 86400000).toISOString(),
     },
   ];
@@ -40,14 +38,14 @@ const Videogrid = () => {
     const fetchvideo = async () => {
       try {
         const res = await axiosInstance.get("/video/getall");
-        if (res.data && Array.isArray(res.data)) {
+        if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
           setvideo(res.data);
         } else {
           setvideo(fallbackVideos);
         }
       } catch (error) {
-        console.error("API Error, loading local mock data...", error);
-        setvideo(fallbackVideos); // Backend crash hone par automatic local data load hoga
+        console.log("Database connection timeout. Loading stable mock data...", error);
+        setvideo(fallbackVideos);
       } finally {
         setloading(false);
       }
@@ -58,7 +56,9 @@ const Videogrid = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
       {loading ? (
-        <>Loading..</>
+        <div className="text-center col-span-full font-semibold text-gray-500 py-10">
+          Loading Videos...
+        </div>
       ) : (
         videos.map((video: any) => <Videocard key={video._id} video={video} />)
       )}
