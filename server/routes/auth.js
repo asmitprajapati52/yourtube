@@ -1,16 +1,18 @@
 import express from "express";
-import { login, updateprofile, updateThemePreference } from "../controllers/auth.js";
+import { login, updateprofile, updateThemePreference, verifyOTP } from "../controllers/auth.js";
 
 const routes = express.Router();
 
 // 1️⃣ Login route
 routes.post("/login", login);
 
-// 2️⃣ Profile update route (params channel integration)
+// 2️⃣ OTP Verification route
+routes.post("/verify-otp", verifyOTP);
+
+// 3️⃣ Profile update route
 routes.patch("/update/:id", updateprofile);
 
-// 3️⃣ Theme Preference Update Route ✅
-// Ye wahi route hai jo frontend Header.tsx se http://localhost:5000/api/update-theme par hit hoga
+// 4️⃣ Theme Preference Update Route
 routes.patch("/update-theme", updateThemePreference);
 
 export default routes;

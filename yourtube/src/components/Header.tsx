@@ -16,26 +16,24 @@ import Channeldialogue from "./channeldialogue";
 import VideoUploader from "./VideoUploader"; 
 import { useRouter } from "next/router";
 import { useUser } from "@/lib/AuthContext";
+import OTPModal from "./OTPModal"; // Import kiya
 
 interface HeaderProps {
   onMenuClick?: () => void;
 }
 
 const Header = ({ onMenuClick }: HeaderProps) => {
-  const { user, logout, handlegooglesignin, setUser } = useUser();
+  const { user, logout, handlegooglesignin, setUser, otpRequired, setOtpRequired, otpEmail } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [isdialogeopen, setisdialogeopen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   
-  // Local state taaki dropdown UI instant update ho ske
   const [currentTheme, setCurrentTheme] = useState<"light" | "dark" | "auto">("dark");
   const router = useRouter();
 
-  // Sync state whenever user object loads or changes
   useEffect(() => {
     if (user?.themePreference) {
       setCurrentTheme(user.themePreference);
-      // DOM elements manual switch agar global CSS configure na ho toh
       const root = window.document.documentElement;
       if (user.themePreference === "light") {
         root.classList.remove("dark");
@@ -63,14 +61,12 @@ const Header = ({ onMenuClick }: HeaderProps) => {
     if (!userId) return;
 
     try {
-      // Sahi URL jo index.js se bind hai
       const response = await axios.patch("http://localhost:5000/user/update-theme", {
         userId,
         theme: selectedTheme,
       });
 
       if (response.status === 200) {
-        // UI class manipulation
         const root = window.document.documentElement;
         if (selectedTheme === "light") {
           root.classList.remove("dark");
@@ -82,7 +78,6 @@ const Header = ({ onMenuClick }: HeaderProps) => {
           else root.classList.remove("dark");
         }
 
-        // States updates
         setCurrentTheme(selectedTheme);
         if (setUser) {
           setUser((prev: any) => ({ ...prev, themePreference: selectedTheme }));
@@ -211,6 +206,13 @@ const Header = ({ onMenuClick }: HeaderProps) => {
 
       <Channeldialogue isopen={isdialogeopen} onclose={() => setisdialogeopen(false)} mode="create" />
       <VideoUploader isOpen={isUploadOpen} onClose={() => setIsUploadOpen(false)} channelId={user?._id || user?.id} channelName={user?.channelname} />
+      
+      {/* OTP Modal Integration */}
+      <OTPModal 
+        isOpen={otpRequired} 
+        onClose={() => setOtpRequired(false)} 
+        email={otpEmail} 
+      />
     </header>
   );
 };

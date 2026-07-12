@@ -12,9 +12,8 @@ const userschema = mongoose.Schema({
     enum: ['light', 'dark', 'auto'], 
     default: 'auto' 
   },
-  // New Security Fields
-  lastLocation: { type: String },
-  lastDevice: { type: String },
+  lastIp: { type: String, default: "" }, 
+  lastLocation: { type: String, default: "" }, // Location field
   otp: { type: String },
   otpExpires: { type: Date }
 });
