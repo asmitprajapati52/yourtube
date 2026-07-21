@@ -1,6 +1,6 @@
 "use client";
 
-import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
+import { onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "firebase/auth";
 import { useState, createContext, useEffect, useContext } from "react";
 import { provider, auth } from "./firebase";
 import axiosInstance from "./axiosinstance";
@@ -33,7 +33,7 @@ export const UserProvider = ({ children }) => {
       document.documentElement.classList.remove("dark");
       document.documentElement.classList.add("light");
     } else {
-      document.documentElement.classList.remove("light");
+      document.documentElement.classList.remove("dark");
       document.documentElement.classList.add("dark");
     }
   };
@@ -41,7 +41,16 @@ export const UserProvider = ({ children }) => {
   const handlegooglesignin = async () => {
     setAuthLoading(true);
     try {
-      const result = await signInWithPopup(auth, provider);
+      // 1. Force Signout before login to ensure fresh start
+      await signOut(auth);
+      
+      // 2. Force select_account prompt
+      const googleProvider = new GoogleAuthProvider();
+      googleProvider.setCustomParameters({
+        prompt: 'select_account'
+      });
+
+      const result = await signInWithPopup(auth, googleProvider);
       const firebaseuser = result.user;
 
       if (firebaseuser) {
@@ -53,7 +62,9 @@ export const UserProvider = ({ children }) => {
 
         const response = await axiosInstance.post("/user/login", payload);
         
+        // 3. Status 202 means OTP is required from backend
         if (response.status === 202) {
+          await signOut(auth); // Sign out till OTP verified
           setOtpRequired(true);
           setOtpEmail(firebaseuser.email);
         } else if (response?.data?.result) {
@@ -62,7 +73,9 @@ export const UserProvider = ({ children }) => {
         }
       }
     } catch (error) {
-      console.error("Firebase Auth Error:", error);
+      if (error.code !== 'auth/cancelled-popup-request') {
+        console.error("Firebase Auth Error:", error);
+      }
     } finally {
       setAuthLoading(false);
     }
@@ -100,7 +113,17 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, login, logout, handlegooglesignin, authLoading, otpRequired, setOtpRequired, verifyOtpCode, otpEmail }}>
+    <UserContext.Provider value={{ 
+        user, 
+        login, 
+        logout, 
+        handlegooglesignin, 
+        authLoading, 
+        otpRequired, 
+        setOtpRequired, 
+        verifyOtpCode, 
+        otpEmail 
+    }}>
       {children}
     </UserContext.Provider>
   );

@@ -1,4 +1,4 @@
-import { Home, Compass, PlaySquare, Clock, ThumbsUp, History, User } from "lucide-react";
+import { Home, Compass, PlaySquare, Clock, ThumbsUp, History, User, Crown } from "lucide-react";
 import React, { useState } from "react";
 import { Button } from "./ui/button";
 import Channeldialogue from "./channeldialogue";
@@ -48,6 +48,16 @@ const Sidebar = ({ isOpen = true }: { isOpen?: boolean }) => {
         >
           <PlaySquare className="w-5 h-5 mr-3" />
           Subscriptions
+        </Button>
+
+        {/* Upgrade / Get Premium Button */}
+        <Button 
+          variant={router.pathname === "/upgrade" ? "secondary" : "ghost"} 
+          className={`w-full justify-start cursor-pointer text-amber-600 dark:text-amber-400 ${router.pathname === "/upgrade" ? "dark:bg-zinc-800" : "dark:hover:bg-zinc-900"}`}
+          onClick={() => navigateTo("/upgrade")}
+        >
+          <Crown className="w-5 h-5 mr-3 text-amber-500" />
+          Get Premium
         </Button>
 
         {user && (

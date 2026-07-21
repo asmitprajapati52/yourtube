@@ -13,9 +13,13 @@ const userschema = mongoose.Schema({
     default: 'auto' 
   },
   lastIp: { type: String, default: "" }, 
-  lastLocation: { type: String, default: "" }, // Location field
+  lastLocation: { type: String, default: "" }, 
   otp: { type: String },
-  otpExpires: { type: Date }
+  otpExpires: { type: Date },
+  // Naye Subscription Fields added here:
+  subscriptionPlan: { type: String, default: "Free" }, // "Free", "Bronze", "Silver", "Gold"
+  isPremium: { type: Boolean, default: false },
+  subscriptionDate: { type: Date }
 });
 
-export default mongoose.model("user", userschema);
+export default mongoose.models.user || mongoose.model("user", userschema);

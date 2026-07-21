@@ -1,3 +1,5 @@
+"use client";
+
 import Comments from "@/components/Comments";
 import RelatedVideos from "@/components/RelatedVideos";
 import VideoInfo from "@/components/VideoInfo";
@@ -13,26 +15,31 @@ export default function WatchVideoPage() {
   const [allVideosList, setAllVideosList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Logic to find and navigate to the next video
+  const handleNextVideo = () => {
+    if (!allVideosList.length || !currentVideo) return;
+    
+    const currentIndex = allVideosList.findIndex((v: any) => v._id === currentVideo._id);
+    const nextVideo = allVideosList[currentIndex + 1] || allVideosList[0]; // Agar last hai toh loop back to 0
+    
+    if (nextVideo) {
+      router.push(`/watch/${nextVideo._id}`);
+    }
+  };
+
   useEffect(() => {
     const fetchVideoDetails = async () => {
       if (!id || typeof id !== "string") return;
       try {
         setLoading(true);
-        // Get all videos stack trace array loop base hook
         const res = await axiosInstance.get("/video/getall");
         const listData = res.data || [];
         setAllVideosList(listData);
 
-        // Extracting target active unique video component match logic
         const targetVideo = listData.find((vid: any) => vid._id === id);
-        if (targetVideo) {
-          setCurrentVideo(targetVideo);
-        } else {
-          // Dynamic safety fallback container
-          setCurrentVideo(listData[0] || null);
-        }
+        setCurrentVideo(targetVideo || listData[0]);
       } catch (error) {
-        console.error("Error loading watch page assets logs:", error);
+        console.error("Error loading watch page assets:", error);
       } finally {
         setLoading(false);
       }
@@ -55,23 +62,23 @@ export default function WatchVideoPage() {
   if (!currentVideo) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white text-black">
-        <p className="text-base font-semibold text-gray-600">Video asset not found or database sync lost.</p>
+        <p className="text-base font-semibold text-gray-600">Video asset not found.</p>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-white text-black">
-      <div className="max-w-7xl mx-auto p-4 md:p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Video Screen Section */}
-          <div className="lg:col-span-2 space-y-4">
-            <Videopplayer video={currentVideo} />
+      <div className="max-w-[1600px] mx-auto p-4 md:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_400px] gap-6">
+          
+          <div className="space-y-4">
+            {/* Yahan pass kiya 'onNext' function */}
+            <Videopplayer video={currentVideo} onNext={handleNextVideo} />
             <VideoInfo video={currentVideo} />
             <Comments videoId={id as string} />
           </div>
           
-          {/* Related Sidebar Layout Section */}
           <div className="space-y-4">
             <RelatedVideos videos={allVideosList} />
           </div>

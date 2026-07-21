@@ -2,51 +2,49 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback } from "./ui/avatar";
+import Link from "next/link";
 
 export default function VideoCard({ video }: any) {
-  // Backend URL config setup
+  // Backend se thumbnail url handle karne ka logic
   const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
-  let finalVideoPath = video?.filepath || "";
+  const thumbnailSrc = video?.thumbnail 
+    ? `${backendBaseUrl}/uploads/${video.thumbnail.split(/[\\/]/).pop()}` 
+    : "https://placehold.co/600x400/png?text=No+Thumbnail"; // Fallback URL
 
-  if (!finalVideoPath.startsWith("http")) {
-    finalVideoPath = `${backendBaseUrl}/${finalVideoPath}`;
-  }
-
-  // Yahan se <Link> hata diya hai kyunki hum ChannelVideos.tsx mein handle kar rahe hain
   return (
-    <div className="space-y-3">
-      {/* Video Player Box */}
-      <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-200">
-        <video
-          src={finalVideoPath}
-          controls
-          preload="metadata"
-          className="w-full h-full object-cover"
+    <Link href={`/watch/${video?._id}`} className="block space-y-3 cursor-pointer group">
+      {/* Thumbnail Box */}
+      <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-100">
+        <img
+          src={thumbnailSrc}
+          alt={video?.videotitle || "Video thumbnail"}
+          className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+          onError={(e) => { e.currentTarget.src = "https://placehold.co/600x400/png?text=Error"; }}
         />
         <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-medium px-1.5 py-0.5 rounded z-10">
-          10:24
+          {video?.duration || "0:00"}
         </div>
       </div>
 
-      {/* Channel and Video Details */}
+      {/* Details */}
       <div className="flex gap-3 px-1">
         <Avatar className="w-9 h-9 flex-shrink-0 border">
           <AvatarFallback className="bg-gray-200 font-bold text-gray-700">
-            {video?.videochanel ? video.videochanel[0].toUpperCase() : "Y"}
+            {video?.videochanel?.[0]?.toUpperCase() || "Y"}
           </AvatarFallback>
         </Avatar>
         
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-sm line-clamp-2 text-gray-900 transition-colors">
+          <h3 className="font-medium text-sm line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors">
             {video?.videotitle}
           </h3>
           <p className="text-xs text-gray-500 mt-1 font-medium">{video?.videochanel}</p>
           <p className="text-[11px] text-gray-400 mt-0.5">
-            {video?.views ? video.views.toLocaleString() : 0} views •{" "}
+            {video?.views?.toLocaleString() || 0} views •{" "}
             {video?.createdAt ? formatDistanceToNow(new Date(video.createdAt)) : "Just now"} ago
           </p>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
