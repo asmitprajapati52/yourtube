@@ -6,6 +6,8 @@ import mongoose from "mongoose";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from 'url';
+import http from "http"; // 🚀 1. http module import karein
+import { Server } from "socket.io"; // 🚀 2. socket.io import karein
 
 // Route Imports
 import userroutes from "./routes/auth.js";
@@ -15,12 +17,23 @@ import watchlaterroutes from "./routes/watchlater.js";
 import historyrroutes from "./routes/history.js";
 import commentroutes from "./routes/comment.js";
 import paymentroutes from "./routes/payment.js";
+import downloadroutes from "./routes/download.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config();
 const app = express();
+const server = http.createServer(app); // 🚀 3. Express app ko http server mein wrap karein
+
+// 🚀 4. Socket.io setup karein (CORS enabled)
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Aap apne frontend ka URL bhi de sakte hain jaise "http://localhost:3000"
+    methods: ["GET", "POST"]
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 const DBURL = process.env.DB_URL;
 
@@ -75,12 +88,40 @@ app.use("/watch", watchlaterroutes);
 app.use("/history", historyrroutes);
 app.use("/comment", commentroutes);
 app.use("/payment", paymentroutes);
+app.use("/downloads", downloadroutes);
 
 app.get("/", (req, res) => { res.send("YouTube backend is running!"); });
 
-// MongoDB Connection
+// 🚀 5. Socket.io Connection Logic for Watch Party
+io.on("connection", (socket) => {
+  console.log(`⚡ User connected: ${socket.id}`);
+
+  // Room Join karne ka event
+  socket.on("join-room", ({ roomId, username }) => {
+    socket.join(roomId);
+    console.log(`User ${username} (${socket.id}) joined room: ${roomId}`);
+    socket.to(roomId).emit("user-connected", { userId: socket.id, username });
+  });
+
+  // Video Sync Action (Play, Pause, Seek)
+  socket.on("video-action", ({ roomId, action, currentTime }) => {
+    socket.to(roomId).emit("sync-video-action", { action, currentTime });
+  });
+
+  // Real-time Chat Message
+  socket.on("send-message", ({ roomId, message, username }) => {
+    io.to(roomId).emit("receive-message", { message, username, timestamp: new Date() });
+  });
+
+  // Disconnect event
+  socket.on("disconnect", () => {
+    console.log(`❌ User disconnected: ${socket.id}`);
+  });
+});
+
+// MongoDB Connection & Server Listen using `server.listen` instead of `app.listen`
 mongoose.connect(DBURL)
   .then(() => {
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    server.listen(PORT, () => console.log(`🚀 Server with Socket.io running on port ${PORT}`));
   })
   .catch((error) => console.log("DB Connection Failed:", error.message));

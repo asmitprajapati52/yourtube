@@ -2,17 +2,16 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import Link from "next/link";
 
 export default function VideoCard({ video }: any) {
-  // Backend se thumbnail url handle karne ka logic
   const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
   const thumbnailSrc = video?.thumbnail 
     ? `${backendBaseUrl}/uploads/${video.thumbnail.split(/[\\/]/).pop()}` 
-    : "https://placehold.co/600x400/png?text=No+Thumbnail"; // Fallback URL
+    : "https://placehold.co/600x400/png?text=No+Thumbnail";
 
   return (
-    <Link href={`/watch/${video?._id}`} className="block space-y-3 cursor-pointer group">
+    // Yahan Link ki jagah div kar diya hai taaki nested <a> tag error na aaye
+    <div className="block space-y-3 cursor-pointer group">
       {/* Thumbnail Box */}
       <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-100">
         <img
@@ -45,6 +44,6 @@ export default function VideoCard({ video }: any) {
           </p>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
