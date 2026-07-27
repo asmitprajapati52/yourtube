@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import users from "../Modals/Auth.js";
+import users from "../modals/Auth.js";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import geoip from 'geoip-lite';
