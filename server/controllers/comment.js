@@ -1,4 +1,4 @@
-import comment from "../Modals/comment.js";
+import comment from "../modals/comment.js";
 import mongoose from "mongoose";
 
 const badWordsBlacklist = ['abuse1', 'spamword', 'gali1', 'gali2', 'fakebot'];
