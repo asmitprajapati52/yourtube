@@ -1,4 +1,4 @@
-import video from "../Modals/video.js";
+import video from "../modals/video.js";
 import fs from "fs";
 import path from "path";
 

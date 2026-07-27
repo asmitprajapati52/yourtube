@@ -1,4 +1,4 @@
-import watchlater from "../Modals/watchlater.js"; // Adjust this import name/path to match your schema
+import watchlater from "../modals/watchlater.js"; // Adjust this import name/path to match your schema
 
 // 1. Fetch all watch later videos for a specific user
 export const getallwatchlater = async (req, res) => {
