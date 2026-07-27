@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "./ui/button";
+
 const tabs = [
   { id: "home", label: "Home" },
   { id: "videos", label: "Videos" },
@@ -8,8 +9,13 @@ const tabs = [
   { id: "community", label: "Community" },
   { id: "about", label: "About" },
 ];
-const Channeltabs = () => {
-  const [activeTab, setActiveTab] = useState("videos");
+
+interface ChannelTabsProps {
+  activeTab: string;
+  setActiveTab: (id: string) => void;
+}
+
+const Channeltabs: React.FC<ChannelTabsProps> = ({ activeTab, setActiveTab }) => {
   return (
     <div className="border-b px-4">
       <div className="flex gap-8 overflow-x-auto">
