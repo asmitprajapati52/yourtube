@@ -3,11 +3,12 @@ import cors from "cors";
 import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
+import dns from "dns"; // ✅ Added
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from 'url';
-import http from "http"; // 🚀 1. http module import karein
-import { Server } from "socket.io"; // 🚀 2. socket.io import karein
+import { fileURLToPath } from "url";
+import http from "http";
+import { Server } from "socket.io";
 
 // Route Imports
 import userroutes from "./routes/auth.js";
@@ -23,15 +24,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config();
-const app = express();
-const server = http.createServer(app); // 🚀 3. Express app ko http server mein wrap karein
 
-// 🚀 4. Socket.io setup karein (CORS enabled)
+// ✅ Force Node to use Google DNS instead of 127.0.0.1
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
+const app = express();
+const server = http.createServer(app);
+
+// Socket.io Setup
 const io = new Server(server, {
   cors: {
-    origin: "*", // Aap apne frontend ka URL bhi de sakte hain jaise "http://localhost:3000"
-    methods: ["GET", "POST"]
-  }
+    origin: "*", // Change to your frontend URL in production
+    methods: ["GET", "POST"],
+  },
 });
 
 const PORT = process.env.PORT || 5000;
@@ -43,17 +48,22 @@ app.use(express.json({ limit: "30mb" }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
 app.use(bodyParser.json());
 
-// Absolute Path Setup for Uploads
+// Uploads Folder
 const uploadsPath = path.join(__dirname, "uploads");
+
 if (!fs.existsSync(uploadsPath)) {
-    fs.mkdirSync(uploadsPath);
+  fs.mkdirSync(uploadsPath);
 }
+
 app.use("/uploads", express.static(uploadsPath));
 
-// Streaming Route (for 206 Partial Content)
+// Streaming Route
 app.get("/uploads/:filename", (req, res) => {
-  const filePath = path.join(uploadsPath, decodeURIComponent(req.params.filename));
-  
+  const filePath = path.join(
+    uploadsPath,
+    decodeURIComponent(req.params.filename)
+  );
+
   if (!fs.existsSync(filePath)) {
     return res.status(404).send("File not found");
   }
@@ -66,21 +76,28 @@ app.get("/uploads/:filename", (req, res) => {
     const parts = range.replace(/bytes=/, "").split("-");
     const start = parseInt(parts[0], 10);
     const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-    const chunksize = (end - start) + 1;
+
+    const chunkSize = end - start + 1;
+
     res.writeHead(206, {
-      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-      'Accept-Ranges': 'bytes',
-      'Content-Length': chunksize,
-      'Content-Type': 'video/mp4',
+      "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+      "Accept-Ranges": "bytes",
+      "Content-Length": chunkSize,
+      "Content-Type": "video/mp4",
     });
+
     fs.createReadStream(filePath, { start, end }).pipe(res);
   } else {
-    res.writeHead(200, { 'Content-Length': fileSize, 'Content-Type': 'video/mp4' });
+    res.writeHead(200, {
+      "Content-Length": fileSize,
+      "Content-Type": "video/mp4",
+    });
+
     fs.createReadStream(filePath).pipe(res);
   }
 });
 
-// App Routes
+// Routes
 app.use("/user", userroutes);
 app.use("/video", videoroutes);
 app.use("/like", likeroutes);
@@ -90,38 +107,55 @@ app.use("/comment", commentroutes);
 app.use("/payment", paymentroutes);
 app.use("/downloads", downloadroutes);
 
-app.get("/", (req, res) => { res.send("YouTube backend is running!"); });
+app.get("/", (req, res) => {
+  res.send("YouTube backend is running!");
+});
 
-// 🚀 5. Socket.io Connection Logic for Watch Party
+// Socket.io
 io.on("connection", (socket) => {
   console.log(`⚡ User connected: ${socket.id}`);
 
-  // Room Join karne ka event
   socket.on("join-room", ({ roomId, username }) => {
     socket.join(roomId);
+
     console.log(`User ${username} (${socket.id}) joined room: ${roomId}`);
-    socket.to(roomId).emit("user-connected", { userId: socket.id, username });
+
+    socket.to(roomId).emit("user-connected", {
+      userId: socket.id,
+      username,
+    });
   });
 
-  // Video Sync Action (Play, Pause, Seek)
   socket.on("video-action", ({ roomId, action, currentTime }) => {
-    socket.to(roomId).emit("sync-video-action", { action, currentTime });
+    socket.to(roomId).emit("sync-video-action", {
+      action,
+      currentTime,
+    });
   });
 
-  // Real-time Chat Message
   socket.on("send-message", ({ roomId, message, username }) => {
-    io.to(roomId).emit("receive-message", { message, username, timestamp: new Date() });
+    io.to(roomId).emit("receive-message", {
+      message,
+      username,
+      timestamp: new Date(),
+    });
   });
 
-  // Disconnect event
   socket.on("disconnect", () => {
     console.log(`❌ User disconnected: ${socket.id}`);
   });
 });
 
-// MongoDB Connection & Server Listen using `server.listen` instead of `app.listen`
-mongoose.connect(DBURL)
+// MongoDB Connection
+mongoose
+  .connect(DBURL)
   .then(() => {
-    server.listen(PORT, () => console.log(`🚀 Server with Socket.io running on port ${PORT}`));
+    console.log("🎯 MongoDB Atlas Connected");
+
+    server.listen(PORT, () => {
+      console.log(`🚀 Server with Socket.io running on port ${PORT}`);
+    });
   })
-  .catch((error) => console.log("DB Connection Failed:", error.message));
+  .catch((error) => {
+    console.log("❌ DB Connection Failed:", error.message);
+  });

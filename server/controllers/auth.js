@@ -16,7 +16,6 @@ const transporter = nodemailer.createTransport({
 
 // Helper: Get Location from IP
 const getLocation = (ip) => {
-  // Localhost (::1) handle karne ke liye fallback IP
   const lookupIp = (ip === "::1" || ip === "127.0.0.1") ? "103.148.164.120" : ip;
   const geo = geoip.lookup(lookupIp);
   return geo ? `${geo.city}, ${geo.region}` : "Unknown Location";
@@ -31,33 +30,32 @@ export const login = async (req, res) => {
   try {
     let existingUser = await users.findOne({ email });
 
+    // Agar user pehle se nahi hai, toh pehle database mein record create karo
     if (!existingUser) {
-      const newUser = await users.create({ 
-        email, name, image, 
+      existingUser = await users.create({ 
+        email, 
+        name, 
+        image, 
         lastIp: currentIp, 
         lastLocation: currentLocation 
       });
-      return res.status(201).json({ result: newUser });
     }
 
-    // Security Check: Location Change
-    if (existingUser.lastLocation !== currentLocation) {
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      const expires = new Date(Date.now() + 10 * 60000);
+    // Har login par OTP generate karke email par bhejne ke liye:
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = new Date(Date.now() + 10 * 60000);
 
-      await users.findOneAndUpdate({ email }, { $set: { otp, otpExpires: expires } });
+    await users.findOneAndUpdate({ email }, { $set: { otp, otpExpires: expires } });
 
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: "Security Alert: New Location Login",
-        text: `New login from ${currentLocation}. OTP: ${otp}. Expires in 10 mins.`
-      });
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Security Alert: Login OTP Verification",
+      text: `Your login OTP is: ${otp}. It will expire in 10 minutes.`
+    });
 
-      return res.status(202).json({ message: "OTP sent to email", requiresOTP: true });
-    }
+    return res.status(202).json({ message: "OTP sent to email", requiresOTP: true });
 
-    return res.status(200).json({ result: existingUser });
   } catch (error) {
     console.error("Login error:", error);
     return res.status(500).json({ message: "Something went wrong" });
@@ -79,7 +77,8 @@ export const verifyOTP = async (req, res) => {
           $set: { 
             lastIp: currentIp, 
             lastLocation: currentLocation, 
-            otp: null, otpExpires: null 
+            otp: null, 
+            otpExpires: null 
           } 
         }
       );

@@ -62,8 +62,8 @@ export const UserProvider = ({ children }) => {
 
         const response = await axiosInstance.post("/user/login", payload);
         
-        // 3. Status 202 means OTP is required from backend
-        if (response.status === 202) {
+        // 3. Flexible check for status 202 or requiresOTP flag from backend
+        if (response.status === 202 || response.data?.requiresOTP === true) {
           await signOut(auth); // Sign out till OTP verified
           setOtpRequired(true);
           setOtpEmail(firebaseuser.email);
