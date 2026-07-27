@@ -1,6 +1,6 @@
 import Razorpay from "razorpay";
 import Payment from "../modals/payment.js";
-import User from "../modals/auth.js";
+import User from "../modals/Auth.js";
 import nodemailer from "nodemailer";
 
 // Nodemailer transporter setup

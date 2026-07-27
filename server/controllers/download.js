@@ -1,5 +1,5 @@
 import Download from "../modals/download.js";
-import User from "../modals/auth.js"; // Aapka existing user model
+import User from "../modals/Auth.js"; // Aapka existing user model
 
 // Plan ke hisaab se daily limit define karne ka function
 const getDownloadLimit = (plan) => {
