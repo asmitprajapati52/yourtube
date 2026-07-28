@@ -3,7 +3,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, RotateCw, Loader2, SkipForward } from "lucide-react";
 
-// Yahan props mein `onNext` add kiya hai
 export default function Videopplayer({ video, onNext }: { video: any, onNext?: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -13,13 +12,16 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
   const [isLoading, setIsLoading] = useState(true);
   const [lastTap, setLastTap] = useState(0);
   
-  // NEW STATE: Next overlay dikhane ke liye
+  // Next overlay state
   const [showNextOverlay, setShowNextOverlay] = useState(false);
+
+  // Dynamic backend base URL for production and local development
+  const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
 
   const getFullUrl = () => {
     if (!video?.filepath) return null;
     const filename = video.filepath.split(/[\\/]/).pop();
-    return `http://localhost:5000/uploads/${encodeURIComponent(filename)}`;
+    return `${backendBaseUrl}/uploads/${encodeURIComponent(filename || "")}`;
   };
 
   const videoUrl = getFullUrl();
@@ -45,7 +47,7 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
   const skip = (seconds: number) => {
     if (videoRef.current) {
       videoRef.current.currentTime += seconds;
-      setShowNextOverlay(false); // Skip karne par overlay hata do
+      setShowNextOverlay(false);
     }
   };
 
@@ -58,10 +60,9 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
     const handleWaiting = () => setIsLoading(true);
     const handlePlaying = () => {
       setIsLoading(false);
-      setShowNextOverlay(false); // Play hone par overlay hide karo
+      setShowNextOverlay(false);
     };
     
-    // Video khatam hone par overlay dikhao
     const handleEnded = () => {
       setIsPlaying(false);
       setShowNextOverlay(true); 
@@ -97,7 +98,7 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
 
       {isLoading && <Loader2 className="absolute inset-0 m-auto text-white animate-spin" size={48} />}
 
-      {/* NEW: YouTube Style Next Overlay */}
+      {/* YouTube Style Next Overlay */}
       {showNextOverlay && (
         <div className="absolute inset-0 z-40 bg-black/80 flex flex-col items-center justify-center animate-in fade-in duration-300">
           <button 
@@ -115,7 +116,7 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
         </div>
       )}
 
-      {/* Controls: Agar overlay open hai toh controls hide kar do */}
+      {/* Controls */}
       {!showNextOverlay && (
         <div className="absolute bottom-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-all z-30">
           <input 

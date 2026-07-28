@@ -34,6 +34,9 @@ export default function WatchPartyContent() {
 
   const [guestName, setGuestName] = useState("");
 
+  // Dynamic backend base URL for production and local environments
+  const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
+
   useEffect(() => {
     setMounted(true);
     setGuestName(`Guest_${Math.floor(Math.random() * 1000)}`);
@@ -62,7 +65,7 @@ export default function WatchPartyContent() {
   useEffect(() => {
     if (!roomId || !mounted) return;
 
-    socket = io("http://localhost:5000");
+    socket = io(backendBaseUrl);
     socket.emit("join-room", { roomId, username });
 
     socket.on("user-connected", ({ userId, username }) => {
@@ -89,7 +92,7 @@ export default function WatchPartyContent() {
     return () => {
       socket.disconnect();
     };
-  }, [roomId, username, mounted]);
+  }, [roomId, username, mounted, backendBaseUrl]);
 
   if (!mounted) return null;
 
@@ -211,10 +214,7 @@ export default function WatchPartyContent() {
     setInputMessage("");
   };
 
-  // Handle video source mapping correctly (fallback to /video/ if /uploads/ gives 416 range error)
   let activeVideoSource = typeof videoUrl === "string" && videoUrl.trim() !== "" ? videoUrl : "";
-  // Optional adjustment if backend serves via /video/ route instead of /uploads/
-  // activeVideoSource = activeVideoSource.replace('/uploads/', '/video/');
 
   return (
     <div className="p-4 md:p-6 flex flex-col lg:flex-row gap-6 max-w-[1700px] mx-auto">

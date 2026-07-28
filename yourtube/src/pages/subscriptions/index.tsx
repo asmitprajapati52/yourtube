@@ -4,9 +4,11 @@ import SubscribedChannelsBar from "@/components/SubscribedChannelsBar";
 import SubscriptionDenseGrid from "@/components/SubscriptionDenseGrid";
 
 export default function SubscriptionsPage() {
-  const [videos, setVideos] = useState([]);
+  const [videos, setVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+  
+  // Production-ready fallback URL
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
 
   useEffect(() => {
     axios

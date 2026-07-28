@@ -45,6 +45,9 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
   const [isDownloaded, setIsDownloaded] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
+  // Dynamic backend base URL for production and local environments
+  const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
+
   useEffect(() => {
     setlikes(video?.Like || 0);
     setDislikes(video?.Dislike || 0);
@@ -174,7 +177,7 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
     }
   };
 
-  // 🚀 Robust Watch Party Handler with Fallback File Support
+  // 🚀 Robust Watch Party Handler using backendBaseUrl
   const handleStartWatchParty = () => {
     const randomRoomId = Math.random().toString(36).substring(2, 9);
     
@@ -182,12 +185,11 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
     const normalizedPath = videoPath.replace(/\\/g, "/");
     let videoFileName = normalizedPath ? normalizedPath.split("/").pop() : "";
 
-    // Agar path ya filename na mile toh default uploaded file use karein
     if (!videoFileName || videoFileName === "undefined") {
       videoFileName = "2026-07-07T20-09-27.786Z-vdo.mp4";
     }
 
-    const fullVideoUrl = `http://localhost:5000/uploads/${encodeURIComponent(videoFileName)}`;
+    const fullVideoUrl = `${backendBaseUrl}/uploads/${encodeURIComponent(videoFileName)}`;
 
     router.push({
       pathname: `/watch-party/${randomRoomId}`,

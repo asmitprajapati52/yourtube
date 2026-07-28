@@ -18,6 +18,9 @@ const UpgradePlan: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [localProfile, setLocalProfile] = useState<any>(null);
 
+  // Backend API base URL for production and local development
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
+
   // Fallback ke liye localStorage se profile check karna
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -123,8 +126,8 @@ const UpgradePlan: React.FC = () => {
     }
 
     try {
-      // 1. Create order on backend
-      const { data: order } = await axios.post("http://localhost:5000/payment/create-order", {
+      // 1. Create order on backend using dynamic backendUrl
+      const { data: order } = await axios.post(`${backendUrl}/payment/create-order`, {
         amount,
       });
 
@@ -133,13 +136,13 @@ const UpgradePlan: React.FC = () => {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_YOUR_KEY_HERE",
         amount: order.amount,
         currency: "INR",
-        name: "MeTube Premium",
+        name: "YourTube Premium",
         description: `Upgrade to ${planName} Plan`,
         order_id: order.id,
         handler: async (response: any) => {
           try {
-            // 3. Verify payment on backend with signature
-            await axios.post("http://localhost:5000/payment/verify", {
+            // 3. Verify payment on backend with signature using dynamic backendUrl
+            await axios.post(`${backendUrl}/payment/verify`, {
               userId,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -177,7 +180,7 @@ const UpgradePlan: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Upgrade Your MeTube Experience</h1>
+        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Upgrade Your YourTube Experience</h1>
         <p className="mt-3 text-lg text-gray-600">
           Choose a plan that fits your streaming needs. Current Active Plan:{" "}
           <span className="font-semibold text-red-600 uppercase">{currentPlan}</span>

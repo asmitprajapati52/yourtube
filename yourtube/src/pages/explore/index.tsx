@@ -4,10 +4,12 @@ import CategoryChips from "@/components/CategoryChips";
 import TrendingVideoRow from "@/components/TrendingVideoRow";
 
 export default function ExplorePage() {
-  const [videos, setVideos] = useState([]);
+  const [videos, setVideos] = useState<any[]>([]);
   const [activeCategory, setActiveCategory] = useState("All");
   const [loading, setLoading] = useState(true);
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+  
+  // Production-ready fallback URL
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
 
   useEffect(() => {
     axios
@@ -22,6 +24,14 @@ export default function ExplorePage() {
       });
   }, [backendUrl]);
 
+  // Filter videos based on active category selection
+  const filteredVideos = activeCategory === "All" 
+    ? videos 
+    : videos.filter((v: any) => 
+        v.category?.toLowerCase() === activeCategory.toLowerCase() ||
+        v.tags?.some((tag: string) => tag.toLowerCase().includes(activeCategory.toLowerCase()))
+      );
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6 text-black bg-white min-h-screen">
       <CategoryChips activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
@@ -30,9 +40,11 @@ export default function ExplorePage() {
         <h2 className="text-xl font-bold tracking-tight px-2">Trending Content ({activeCategory})</h2>
         {loading ? (
           <p className="text-sm text-gray-400 px-2 animate-pulse">Loading trending feed updates...</p>
+        ) : filteredVideos.length === 0 ? (
+          <p className="text-sm text-gray-500 px-2">No videos found for {activeCategory}.</p>
         ) : (
           <div className="flex flex-col gap-4">
-            {videos.map((v: any) => (
+            {filteredVideos.map((v: any) => (
               <TrendingVideoRow key={v._id} video={v} />
             ))}
           </div>

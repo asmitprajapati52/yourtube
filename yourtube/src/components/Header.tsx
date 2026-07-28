@@ -32,6 +32,9 @@ const Header = ({ onMenuClick }: HeaderProps) => {
   const [currentTheme, setCurrentTheme] = useState<"light" | "dark" | "auto">("dark");
   const router = useRouter();
 
+  // Backend API base URL for production and local development
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
+
   useEffect(() => {
     if (user?.themePreference) {
       setCurrentTheme(user.themePreference);
@@ -57,7 +60,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
     if (!userId) return;
 
     try {
-      const response = await axios.patch("http://localhost:5000/user/update-theme", {
+      const response = await axios.patch(`${backendUrl}/user/update-theme`, {
         userId,
         theme: selectedTheme,
       });

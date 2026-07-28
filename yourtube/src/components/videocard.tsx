@@ -1,48 +1,52 @@
-"use client";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import CategoryChips from "@/components/CategoryChips";
+import TrendingVideoRow from "@/components/TrendingVideoRow";
 
-import { formatDistanceToNow } from "date-fns";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+export default function ExplorePage() {
+  const [videos, setVideos] = useState<any[]>([]);
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
 
-export default function VideoCard({ video }: any) {
-  const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
-  const thumbnailSrc = video?.thumbnail 
-    ? `${backendBaseUrl}/uploads/${video.thumbnail.split(/[\\/]/).pop()}` 
-    : "https://placehold.co/600x400/png?text=No+Thumbnail";
+  useEffect(() => {
+    axios
+      .get(`${backendUrl}/video/getall`)
+      .then((res) => {
+        setVideos(res.data || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, [backendUrl]);
+
+  // Filter videos based on active category
+  const filteredVideos = activeCategory === "All" 
+    ? videos 
+    : videos.filter((v: any) => 
+        v.category?.toLowerCase() === activeCategory.toLowerCase() ||
+        v.tags?.some((tag: string) => tag.toLowerCase().includes(activeCategory.toLowerCase()))
+      );
 
   return (
-    // Yahan Link ki jagah div kar diya hai taaki nested <a> tag error na aaye
-    <div className="block space-y-3 cursor-pointer group">
-      {/* Thumbnail Box */}
-      <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-100">
-        <img
-          src={thumbnailSrc}
-          alt={video?.videotitle || "Video thumbnail"}
-          className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-          onError={(e) => { e.currentTarget.src = "https://placehold.co/600x400/png?text=Error"; }}
-        />
-        <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-medium px-1.5 py-0.5 rounded z-10">
-          {video?.duration || "0:00"}
-        </div>
-      </div>
-
-      {/* Details */}
-      <div className="flex gap-3 px-1">
-        <Avatar className="w-9 h-9 flex-shrink-0 border">
-          <AvatarFallback className="bg-gray-200 font-bold text-gray-700">
-            {video?.videochanel?.[0]?.toUpperCase() || "Y"}
-          </AvatarFallback>
-        </Avatar>
-        
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-sm line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors">
-            {video?.videotitle}
-          </h3>
-          <p className="text-xs text-gray-500 mt-1 font-medium">{video?.videochanel}</p>
-          <p className="text-[11px] text-gray-400 mt-0.5">
-            {video?.views?.toLocaleString() || 0} views •{" "}
-            {video?.createdAt ? formatDistanceToNow(new Date(video.createdAt)) : "Just now"} ago
-          </p>
-        </div>
+    <div className="p-6 max-w-6xl mx-auto space-y-6 text-black bg-white min-h-screen">
+      <CategoryChips activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
+      
+      <div className="space-y-4 pt-2">
+        <h2 className="text-xl font-bold tracking-tight px-2">Trending Content ({activeCategory})</h2>
+        {loading ? (
+          <p className="text-sm text-gray-400 px-2 animate-pulse">Loading trending feed updates...</p>
+        ) : filteredVideos.length === 0 ? (
+          <p className="text-sm text-gray-500 px-2">No videos found for {activeCategory}.</p>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {filteredVideos.map((v: any) => (
+              <TrendingVideoRow key={v._id} video={v} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

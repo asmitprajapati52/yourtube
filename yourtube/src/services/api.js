@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Express backend ka base URL (port 5000)
 const API = axios.create({ 
-  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000" 
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com"
 });
 
 // 1. Video download request record karne ke liye (Limit check ke sath)
