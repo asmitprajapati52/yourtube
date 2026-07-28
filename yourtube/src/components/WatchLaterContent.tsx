@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-// 🚀 FIXED TYPO: 'luc-react' ko badal kar 'lucide-react' kar diya hai
 import { MoreVertical, X, Clock, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +18,9 @@ export default function WatchLaterContent() {
   const [watchLater, setWatchLater] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useUser();
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:5000";
+  
+  // Production-ready backend URL with Render fallback
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
 
   useEffect(() => {
     if (user) {

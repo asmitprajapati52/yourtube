@@ -1,8 +1,8 @@
 import axios from "axios";
 
+// Production-ready Axios instance with dynamic backend base URL
 const axiosInstance = axios.create({
-  // FIXED: URL se '/api' hata diya taaki yeh direct backend ke routes se match kare
-  baseURL: "http://127.0.0.1:5000",
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com",
 });
 
 export default axiosInstance;
