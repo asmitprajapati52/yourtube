@@ -1,7 +1,7 @@
-import axios from "axios";
+import axiosInstance from "@/lib/axiosinstance";
 
 // Express backend ka base URL (port 5000)
-const API = axios.create({ 
+const API = axiosInstance.create({ 
   baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com"
 });
 

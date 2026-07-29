@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import Link from "next/link";
 import { Input } from "./ui/input";
-import axios from "axios";
+import axiosInstance from "@/lib/axiosinstance";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,7 +60,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
     if (!userId) return;
 
     try {
-      const response = await axios.patch(`${backendUrl}/user/update-theme`, {
+      const response = await axiosInstance.patch(`${backendUrl}/user/update-theme`, {
         userId,
         theme: selectedTheme,
       });

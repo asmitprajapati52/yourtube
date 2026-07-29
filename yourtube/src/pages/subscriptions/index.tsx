@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "@/lib/axiosinstance";
 import SubscribedChannelsBar from "@/components/SubscribedChannelsBar";
 import SubscriptionDenseGrid from "@/components/SubscriptionDenseGrid";
 
@@ -11,7 +11,7 @@ export default function SubscriptionsPage() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
 
   useEffect(() => {
-    axios
+    axiosInstance
       .get(`${backendUrl}/video/getall`)
       .then((res) => {
         setVideos(res.data || []);

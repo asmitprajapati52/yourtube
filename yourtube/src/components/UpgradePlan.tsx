@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "@/lib/axiosinstance";
 import { useUser } from "@/lib/AuthContext";
 
 interface Plan {
@@ -127,7 +127,7 @@ const UpgradePlan: React.FC = () => {
 
     try {
       // 1. Create order on backend using dynamic backendUrl
-      const { data: order } = await axios.post(`${backendUrl}/payment/create-order`, {
+      const { data: order } = await axiosInstance.post(`${backendUrl}/payment/create-order`, {
         amount,
       });
 
@@ -142,7 +142,7 @@ const UpgradePlan: React.FC = () => {
         handler: async (response: any) => {
           try {
             // 3. Verify payment on backend with signature using dynamic backendUrl
-            await axios.post(`${backendUrl}/payment/verify`, {
+            await axiosInstance.post(`${backendUrl}/payment/verify`, {
               userId,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
