@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar"; 
 import ThemeEngine from "@/components/ThemeEngine"; 
@@ -8,7 +8,13 @@ import { UserProvider } from "@/lib/AuthContext";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const mockUserSession = pageProps.user || null; 
+  const mockUserSession = pageProps.user || null;
+
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      setIsSidebarOpen(false);
+    }
+  }, []);
 
   return (
     <UserProvider> 
@@ -24,10 +30,13 @@ export default function App({ Component, pageProps }: AppProps) {
         {/* Content pipeline layout structure */}
         <div className="flex flex-1 w-full relative">
           
-          <Sidebar isOpen={isSidebarOpen} />
+          <Sidebar
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+          />
           
           {/* Main Layout Component container */}
-          <main className="flex-1 w-full bg-white dark:bg-[#0f0f0f] overflow-x-hidden transition-colors duration-150">
+          <main className="flex-1 w-full min-w-0 bg-white dark:bg-[#0f0f0f] overflow-x-hidden transition-colors duration-150">
             <Component {...pageProps} />
           </main>
           

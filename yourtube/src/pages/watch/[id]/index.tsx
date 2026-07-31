@@ -69,8 +69,8 @@ export default function WatchVideoPage() {
 
   return (
     <div className="min-h-screen bg-white text-black">
-      <div className="max-w-[1600px] mx-auto p-4 md:p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_400px] gap-6">
+      <div className="max-w-[1600px] xl:max-w-[1800px] 2xl:max-w-[1920px] mx-auto p-4 md:p-6 lg:p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_440px] 2xl:grid-cols-[minmax(0,1fr)_480px] gap-6 lg:gap-8">
           
           <div className="space-y-4">
             {/* Yahan pass kiya 'onNext' function */}

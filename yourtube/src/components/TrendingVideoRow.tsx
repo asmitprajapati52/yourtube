@@ -17,7 +17,7 @@ export default function TrendingVideoRow({ video }: VideoRowProps) {
   return (
     <Link href={`/watch/${videoId}`} className="group flex flex-col sm:flex-row gap-4 p-2 rounded-xl hover:bg-gray-50 transition-colors">
       {/* Thumbnail Layer */}
-      <div className="aspect-video w-full sm:w-72 bg-slate-900 rounded-xl overflow-hidden shrink-0 flex items-center justify-center text-gray-400 relative border border-gray-100 shadow-xs">
+      <div className="aspect-video w-full sm:w-72 lg:w-80 xl:w-96 bg-slate-900 rounded-xl overflow-hidden shrink-0 flex items-center justify-center text-gray-400 relative border border-gray-100 shadow-xs">
         <Play className="w-8 h-8 opacity-0 group-hover:opacity-80 transition-all duration-200 text-white scale-90 group-hover:scale-100 absolute" />
         <div className="w-full h-full bg-linear-to-br from-zinc-800 to-black flex items-center justify-center text-xs text-zinc-500 font-mono">
           [Thumbnail Fallback]

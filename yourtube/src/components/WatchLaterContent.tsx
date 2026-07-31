@@ -129,9 +129,9 @@ export default function WatchLaterContent() {
           const videoUrl = getVideoSrc(item.videoid.filepath);
 
           return (
-            <div key={item._id} className="flex gap-4 group relative items-start hover:bg-zinc-50 p-2.5 rounded-xl transition-all border border-transparent hover:border-zinc-100">
-              <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
-                <div className="relative w-40 aspect-video bg-zinc-950 rounded-lg overflow-hidden border border-zinc-200 flex items-center justify-center text-zinc-600 group-hover:scale-102 transition-transform duration-200">
+            <div key={item._id} className="flex flex-col sm:flex-row gap-4 group relative items-start hover:bg-zinc-50 p-2.5 rounded-xl transition-all border border-transparent hover:border-zinc-100">
+              <Link href={`/watch/${item.videoid._id}`} className="shrink-0 w-full sm:w-auto">
+                <div className="relative w-full sm:w-40 aspect-video bg-zinc-950 rounded-lg overflow-hidden border border-zinc-200 flex items-center justify-center text-zinc-600 group-hover:scale-102 transition-transform duration-200">
                   <Play className="w-6 h-6 text-white/80 absolute z-10 drop-shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" />
                   
                   {videoUrl ? (

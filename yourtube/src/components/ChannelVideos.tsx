@@ -1,10 +1,9 @@
-// @ts-nocheck
 import React from "react";
-import Link from "next/link";
 import VideoCard from "./videocard";
+import type { Video } from "@/types/video";
 
 interface ChannelVideosProps {
-  videos: any[];
+  videos: Video[];
 }
 
 export default function ChannelVideos({ videos }: ChannelVideosProps) {
@@ -19,17 +18,14 @@ export default function ChannelVideos({ videos }: ChannelVideosProps) {
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4 text-gray-900">Videos</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {videos.map((video: any) => (
-          <Link 
-            href={`/watch/${video._id}`} 
-            key={video._id} 
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-6">
+        {videos.map((video) => (
+          <div
+            key={video._id}
             className="block group transition-transform hover:scale-[1.01]"
           >
-            <div className="pointer-events-none">
-              <VideoCard video={video} />
-            </div>
-          </Link>
+            <VideoCard video={video} />
+          </div>
         ))}
       </div>
     </div>
