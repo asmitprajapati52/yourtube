@@ -18,9 +18,6 @@ const UpgradePlan: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [localProfile, setLocalProfile] = useState<any>(null);
 
-  // Backend API base URL for production and local development
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
-
   // Fallback ke liye localStorage se profile check karna
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -126,8 +123,8 @@ const UpgradePlan: React.FC = () => {
     }
 
     try {
-      // 1. Create order on backend using dynamic backendUrl
-      const { data: order } = await axiosInstance.post(`${backendUrl}/payment/create-order`, {
+      // 1. Create order on backend using axiosInstance
+      const { data: order } = await axiosInstance.post("/payment/create-order", {
         amount,
       });
 
@@ -141,8 +138,8 @@ const UpgradePlan: React.FC = () => {
         order_id: order.id,
         handler: async (response: any) => {
           try {
-            // 3. Verify payment on backend with signature using dynamic backendUrl
-            await axiosInstance.post(`${backendUrl}/payment/verify`, {
+            // 3. Verify payment on backend using axiosInstance
+            await axiosInstance.post("/payment/verify", {
               userId,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
