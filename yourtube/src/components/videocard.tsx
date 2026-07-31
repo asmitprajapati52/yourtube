@@ -7,11 +7,10 @@ export default function ExplorePage() {
   const [videos, setVideos] = useState<any[]>([]);
   const [activeCategory, setActiveCategory] = useState("All");
   const [loading, setLoading] = useState(true);
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
 
   useEffect(() => {
     axiosInstance
-      .get(`${backendUrl}/video/getall`)
+      .get("/video/getall")
       .then((res) => {
         setVideos(res.data || []);
         setLoading(false);
@@ -20,7 +19,7 @@ export default function ExplorePage() {
         console.error(err);
         setLoading(false);
       });
-  }, [backendUrl]);
+  }, []);
 
   // Filter videos based on active category
   const filteredVideos = activeCategory === "All" 
