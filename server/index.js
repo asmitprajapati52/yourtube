@@ -31,11 +31,32 @@ dns.setServers(["8.8.8.8", "8.8.4.4"]);
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io Setup
+// Allowed frontend origins
+const allowedOrigins = [
+  "https://yourtube-gamma.vercel.app",
+  "http://localhost:3000"
+];
+
+// Express CORS Setup with credentials support
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+// Socket.io Setup with CORS
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
@@ -43,7 +64,6 @@ const PORT = process.env.PORT || 5000;
 const DBURL = process.env.DB_URL;
 
 // Middleware
-app.use(cors());
 app.use(express.json({ limit: "30mb" }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
 app.use(bodyParser.json());
@@ -111,7 +131,7 @@ app.get("/", (req, res) => {
   res.send("YouTube backend is running!");
 });
 
-// Socket.io
+// Socket.io Events
 io.on("connection", (socket) => {
   console.log(`⚡ User connected: ${socket.id}`);
 
@@ -145,7 +165,7 @@ io.on("connection", (socket) => {
   });
 });
 
-// ✅ 1. Pehle Server ko PORT par listen karao (Render ke liye zaroori hai)
+// ✅ 1. Pehle Server ko PORT par listen karao
 server.listen(PORT, () => {
   console.log(`🚀 Server with Socket.io running on port ${PORT}`);
 });
