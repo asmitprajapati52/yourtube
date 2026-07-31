@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
-import dns from "dns"; // ✅ Added
+import dns from "dns";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
@@ -25,7 +25,7 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
-// ✅ Force Node to use Google DNS instead of 127.0.0.1
+// ✅ Force Node to use Google DNS
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const app = express();
@@ -34,7 +34,7 @@ const server = http.createServer(app);
 // Socket.io Setup
 const io = new Server(server, {
   cors: {
-    origin: "*", // Change to your frontend URL in production
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
@@ -117,7 +117,6 @@ io.on("connection", (socket) => {
 
   socket.on("join-room", ({ roomId, username }) => {
     socket.join(roomId);
-
     console.log(`User ${username} (${socket.id}) joined room: ${roomId}`);
 
     socket.to(roomId).emit("user-connected", {
@@ -146,15 +145,16 @@ io.on("connection", (socket) => {
   });
 });
 
-// MongoDB Connection
+// ✅ 1. Pehle Server ko PORT par listen karao (Render ke liye zaroori hai)
+server.listen(PORT, () => {
+  console.log(`🚀 Server with Socket.io running on port ${PORT}`);
+});
+
+// ✅ 2. Phir Background mein Database connect karo
 mongoose
   .connect(DBURL)
   .then(() => {
     console.log("🎯 MongoDB Atlas Connected");
-
-    server.listen(PORT, () => {
-      console.log(`🚀 Server with Socket.io running on port ${PORT}`);
-    });
   })
   .catch((error) => {
     console.log("❌ DB Connection Failed:", error.message);
