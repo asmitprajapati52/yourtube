@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback } from "./ui/avatar";
@@ -20,6 +21,19 @@ export default function VideoCard({ video }: VideoCardProps) {
     return `${backendBaseUrl}/uploads/${encodeURIComponent(filename || "")}`;
   };
 
+  const [videoSrc, setVideoSrc] = useState<string>("");
+
+  useEffect(() => {
+    setVideoSrc(getVideoSrc());
+  }, [video]);
+
+  const handleVideoError = () => {
+    const fallback = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+    if (videoSrc !== fallback) {
+      setVideoSrc(fallback);
+    }
+  };
+
   const views = video?.views ?? 0;
   const createdAt = video?.createdAt ? new Date(video.createdAt) : new Date();
   const channelInitial = video?.videochanel?.[0] ?? "C";
@@ -29,7 +43,8 @@ export default function VideoCard({ video }: VideoCardProps) {
       <div className="space-y-3">
         <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
           <video
-            src={getVideoSrc()}
+            src={videoSrc}
+            onError={handleVideoError}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
           />
           <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 rounded">

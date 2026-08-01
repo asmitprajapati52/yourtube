@@ -24,7 +24,19 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
     return `${backendBaseUrl}/uploads/${encodeURIComponent(filename || "")}`;
   };
 
-  const videoUrl = getFullUrl();
+  const [videoSrc, setVideoSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    setVideoSrc(getFullUrl());
+  }, [video]);
+
+  const handleVideoError = () => {
+    const fallback = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+    if (videoSrc !== fallback) {
+      console.warn("Video failed to load. Falling back to public sample video.");
+      setVideoSrc(fallback);
+    }
+  };
 
   const formatTime = (time: number) => {
     if (isNaN(time)) return "0:00";
@@ -83,17 +95,18 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
     };
   }, []);
 
-  if (!videoUrl) return <div className="text-white p-4">Video not found</div>;
+  if (!videoSrc) return <div className="text-white p-4">Video not found</div>;
 
   return (
     <div className="relative group w-full bg-black rounded-xl overflow-hidden shadow-2xl" onClick={handleTap}>
       <video 
-        key={videoUrl}
+        key={videoSrc}
         ref={videoRef} 
-        src={videoUrl} 
+        src={videoSrc} 
         className="w-full aspect-video" 
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
+        onError={handleVideoError}
       />
 
       {isLoading && <Loader2 className="absolute inset-0 m-auto text-white animate-spin" size={48} />}
