@@ -77,43 +77,55 @@ if (!fs.existsSync(uploadsPath)) {
 
 app.use("/uploads", express.static(uploadsPath));
 
-// Streaming Route
+// Streaming Route with 416 Range Error Fix
 app.get("/uploads/:filename", (req, res) => {
-  const filePath = path.join(
-    uploadsPath,
-    decodeURIComponent(req.params.filename)
-  );
+  try {
+    const filePath = path.join(
+      uploadsPath,
+      decodeURIComponent(req.params.filename)
+    );
 
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).send("File not found");
-  }
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send("File not found");
+    }
 
-  const stat = fs.statSync(filePath);
-  const fileSize = stat.size;
-  const range = req.headers.range;
+    const stat = fs.statSync(filePath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
 
-  if (range) {
-    const parts = range.replace(/bytes=/, "").split("-");
-    const start = parseInt(parts[0], 10);
-    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
 
-    const chunkSize = end - start + 1;
+      // Handle invalid range requests to prevent 416 crash
+      if (start >= fileSize || end >= fileSize) {
+        res.writeHead(416, {
+          "Content-Range": `bytes */${fileSize}`
+        });
+        return res.end();
+      }
 
-    res.writeHead(206, {
-      "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-      "Accept-Ranges": "bytes",
-      "Content-Length": chunkSize,
-      "Content-Type": "video/mp4",
-    });
+      const chunkSize = end - start + 1;
 
-    fs.createReadStream(filePath, { start, end }).pipe(res);
-  } else {
-    res.writeHead(200, {
-      "Content-Length": fileSize,
-      "Content-Type": "video/mp4",
-    });
+      res.writeHead(206, {
+        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": chunkSize,
+        "Content-Type": "video/mp4",
+      });
 
-    fs.createReadStream(filePath).pipe(res);
+      fs.createReadStream(filePath, { start, end }).pipe(res);
+    } else {
+      res.writeHead(200, {
+        "Content-Length": fileSize,
+        "Content-Type": "video/mp4",
+      });
+
+      fs.createReadStream(filePath).pipe(res);
+    }
+  } catch (err) {
+    res.status(500).send("Error streaming video");
   }
 });
 
