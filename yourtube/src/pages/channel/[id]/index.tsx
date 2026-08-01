@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import ChannelHeader from "@/components/ChannelHeader";
 import Channeltabs from "@/components/Channeltabs";
 import ChannelVideos from "@/components/ChannelVideos";
-import VideoUploader from "@/components/VideoUploader";
+import { VideoUploader } from "@/components/VideoUploader";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { toast } from "sonner";
