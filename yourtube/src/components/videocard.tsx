@@ -14,7 +14,7 @@ export default function VideoCard({ video }: VideoCardProps) {
     process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
 
   const getVideoSrc = () => {
-    if (!video?.filepath) return "/video/vdo.mp4";
+    if (!video?.filepath) return `${backendBaseUrl}/video/vdo.mp4`;
     if (video.filepath.startsWith("http")) return video.filepath;
     const filename = video.filepath.split(/[\\/]/).pop();
     return `${backendBaseUrl}/uploads/${encodeURIComponent(filename || "")}`;

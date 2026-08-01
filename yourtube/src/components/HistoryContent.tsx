@@ -77,7 +77,16 @@ export default function HistoryContent() {
       </div>
     );
   }
-  const videos = "/video/vdo.mp4";
+  const backendBaseUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
+
+  const getVideoSrc = (video: any) => {
+    if (!video?.filepath) return `${backendBaseUrl}/video/vdo.mp4`;
+    if (video.filepath.startsWith("http")) return video.filepath;
+    const filename = video.filepath.split(/[\\/]/).pop();
+    return `${backendBaseUrl}/uploads/${encodeURIComponent(filename || "")}`;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -90,7 +99,7 @@ export default function HistoryContent() {
             <Link href={`/watch/${item.videoid._id}`} className="shrink-0 w-full sm:w-auto">
               <div className="relative w-full sm:w-40 aspect-video bg-gray-100 rounded overflow-hidden">
                 <video
-                  src={`${process.env.BACKEND_URL}/${item.videoid?.filepath}`}
+                  src={getVideoSrc(item.videoid)}
                   className="object-cover group-hover:scale-105 transition-transform duration-200"
                 />
               </div>

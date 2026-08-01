@@ -9,9 +9,20 @@ interface RelatedVideosProps {
     videochanel: string;
     views: number;
     createdAt: string;
+    filepath?: string;
   }>;
 }
-const vid = "/video/vdo.mp4";
+
+const backendBaseUrl =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
+
+const getVideoSrc = (video: any) => {
+  if (!video?.filepath) return `${backendBaseUrl}/video/vdo.mp4`;
+  if (video.filepath.startsWith("http")) return video.filepath;
+  const filename = video.filepath.split(/[\\/]/).pop();
+  return `${backendBaseUrl}/uploads/${encodeURIComponent(filename || "")}`;
+};
+
 export default function RelatedVideos({ videos }: RelatedVideosProps) {
   return (
     <div className="space-y-2">
@@ -23,7 +34,7 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
         >
           <div className="relative w-full sm:w-40 aspect-video bg-gray-100 rounded overflow-hidden shrink-0">
             <video
-              src={vid}
+              src={getVideoSrc(video)}
               className="object-cover group-hover:scale-105 transition-transform duration-200"
             />
           </div>

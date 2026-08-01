@@ -73,7 +73,16 @@ const SearchResult = ({ query }: any) => {
       </div>
     );
   }
-  const vids = "/video/vdo.mp4";
+  const backendBaseUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
+
+  const getVideoSrc = (v: any) => {
+    if (!v?.filepath) return `${backendBaseUrl}/video/vdo.mp4`;
+    if (v.filepath.startsWith("http")) return v.filepath;
+    const filename = v.filepath.split(/[\\/]/).pop();
+    return `${backendBaseUrl}/uploads/${encodeURIComponent(filename || "")}`;
+  };
+
   return (
     <div className="space-y-6">
       {/* Video Results */}
@@ -84,7 +93,7 @@ const SearchResult = ({ query }: any) => {
               <Link href={`/watch/${video._id}`} className="shrink-0 w-full sm:w-auto">
                 <div className="relative w-full sm:w-80 lg:w-96 xl:w-[420px] aspect-video bg-gray-100 rounded-lg overflow-hidden">
                   <video
-                    src={vids}
+                    src={getVideoSrc(video)}
                     className="object-cover group-hover:scale-105 transition-transform duration-200"
                   />
                   <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 rounded">
