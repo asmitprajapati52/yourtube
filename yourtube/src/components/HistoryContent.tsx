@@ -33,21 +33,25 @@ export default function HistoryContent() {
 
     try {
       const historyData = await axiosInstance.get(`/history/${user?._id}`);
-      setHistory(historyData.data);
+      // 🚀 SAFETY FIX: Sirf wahi history items rakho jinka videoid exist karta ho!
+      const validHistory = (historyData.data || []).filter(
+        (item: any) => item && item.videoid != null
+      );
+      setHistory(validHistory);
     } catch (error) {
       console.error("Error loading history:", error);
     } finally {
       setLoading(false);
     }
   };
+
   if (loading) {
-    return <div>Loading history...</div>;
+    return <div className="text-white p-6">Loading history...</div>;
   }
 
   const handleRemoveFromHistory = async (historyId: string) => {
     try {
       console.log("Removing from history:", historyId);
-
       setHistory(history.filter((item) => item._id !== historyId));
     } catch (error) {
       console.error("Error removing from history:", error);
@@ -77,6 +81,7 @@ export default function HistoryContent() {
       </div>
     );
   }
+
   const backendBaseUrl =
     process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
 
@@ -94,56 +99,61 @@ export default function HistoryContent() {
       </div>
 
       <div className="space-y-4">
-        {history.map((item) => (
-          <div key={item._id} className="flex flex-col sm:flex-row gap-4 group">
-            <Link href={`/watch/${item.videoid._id}`} className="shrink-0 w-full sm:w-auto">
-              <div className="relative w-full sm:w-40 aspect-video bg-gray-100 rounded overflow-hidden">
-                <video
-                  src={getVideoSrc(item.videoid)}
-                  className="object-cover group-hover:scale-105 transition-transform duration-200"
-                />
-              </div>
-            </Link>
+        {history.map((item) => {
+          // Extra safety check per iteration
+          if (!item?.videoid) return null;
 
-            <div className="flex-1 min-w-0">
-              <Link href={`/watch/${item.videoid._id}`}>
-                <h3 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600 mb-1">
-                  {item.videoid.videotitle}
-                </h3>
+          return (
+            <div key={item._id} className="flex flex-col sm:flex-row gap-4 group">
+              <Link href={`/watch/${item.videoid._id}`} className="shrink-0 w-full sm:w-auto">
+                <div className="relative w-full sm:w-40 aspect-video bg-gray-100 rounded overflow-hidden">
+                  <video
+                    src={getVideoSrc(item.videoid)}
+                    className="object-cover group-hover:scale-105 transition-transform duration-200 w-full h-full"
+                  />
+                </div>
               </Link>
-              <p className="text-sm text-gray-600">
-                {item.videoid.videochanel}
-              </p>
-              <p className="text-sm text-gray-600">
-                {item.videoid.views.toLocaleString()} views •{" "}
-                {formatDistanceToNow(new Date(item.videoid.createdAt))} ago
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                Added {formatDistanceToNow(new Date(item.createdAt))} ago
-              </p>
-            </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="opacity-0 group-hover:opacity-100"
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => handleRemoveFromHistory(item._id)}
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  Remove from watch history
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        ))}
+              <div className="flex-1 min-w-0">
+                <Link href={`/watch/${item.videoid._id}`}>
+                  <h3 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600 mb-1">
+                    {item.videoid.videotitle || "Untitled Video"}
+                  </h3>
+                </Link>
+                <p className="text-sm text-gray-600">
+                  {item.videoid.videochanel || "Unknown Channel"}
+                </p>
+                <p className="text-sm text-gray-600">
+                  {(item.videoid.views || 0).toLocaleString()} views •{" "}
+                  {item.videoid.createdAt ? formatDistanceToNow(new Date(item.videoid.createdAt)) : ""} ago
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Added {item.createdAt ? formatDistanceToNow(new Date(item.createdAt)) : ""} ago
+                </p>
+              </div>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="opacity-0 group-hover:opacity-100"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => handleRemoveFromHistory(item._id)}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Remove from watch history
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
