@@ -14,8 +14,27 @@ import {
 import axiosInstance from "@/lib/axiosinstance";
 import { useUser } from "@/lib/AuthContext";
 
+type WatchLaterItem = {
+  _id: string;
+  createdAt?: string;
+  videoid?: {
+    _id?: string;
+    videotitle?: string;
+    title?: string;
+    thumbnail?: string;
+    videoThumbnail?: string;
+    poster?: string;
+    videochanel?: string;
+    channel?: string;
+    views?: number;
+    createdAt?: string;
+    filepath?: string;
+    videoPath?: string;
+  };
+};
+
 export default function WatchLaterContent() {
-  const [watchLater, setWatchLater] = useState<any[]>([]);
+  const [watchLater, setWatchLater] = useState<WatchLaterItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useUser();
   
@@ -50,7 +69,7 @@ export default function WatchLaterContent() {
       if (!user?._id) return;
       // Call your toggle/remove backend route
       await axiosInstance.post(`/watchlater/video/${videoId}`, { userId: user._id });
-      setWatchLater(watchLater.filter((item) => item._id !== watchLaterRecordId));
+      setWatchLater((prev) => prev.filter((item) => item._id !== watchLaterRecordId));
     } catch (error) {
       console.error("Error removing from watch later:", error);
     }
