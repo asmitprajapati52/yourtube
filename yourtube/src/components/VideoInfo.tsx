@@ -118,19 +118,24 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
     }
   };
 
+  // 🚀 Fixed Watch Later endpoint matching backend route: POST /watchlater/video/:videoId
   const handleWatchLater = async () => {
-    if (!user || !video?._id) return;
+    if (!user || !video?._id) {
+      alert("Please login to save videos to Watch Later");
+      return;
+    }
     try {
-      const res = await axiosInstance.post(`/watch/${video._id}`, {
+      const res = await axiosInstance.post(`/watchlater/video/${video._id}`, {
         userId: user?._id,
       });
-      if (res.data.watchlater) {
-        setIsWatchLater(!isWatchLater);
+      // Backend returns { added: true/false }
+      if (res.data.added !== undefined) {
+        setIsWatchLater(res.data.added);
       } else {
-        setIsWatchLater(false);
+        setIsWatchLater(!isWatchLater);
       }
     } catch (error) {
-      console.log(error);
+      console.log("Error toggling watch later:", error);
     }
   };
 
@@ -212,7 +217,7 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
             <h3 className="font-medium text-black">{video?.videochanel || "Unknown Channel"}</h3>
             <p className="text-sm text-gray-600">1.2M subscribers</p>
           </div>
-          <Button className="ml-4 bg-black hover:bg-zinc-800 text-white rounded-full">Subscribe</Button>
+          <Button className="ml-4 bg-black hover:bg-zinc-800 text-white rounded-full cursor-pointer">Subscribe</Button>
         </div>
         
         <div className="flex items-center gap-2 flex-wrap">
@@ -220,7 +225,7 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-l-full hover:bg-gray-200 text-black"
+              className="rounded-l-full hover:bg-gray-200 text-black cursor-pointer"
               onClick={handleLike}
             >
               <ThumbsUp
@@ -234,7 +239,7 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-r-full hover:bg-gray-200 text-black"
+              className="rounded-r-full hover:bg-gray-200 text-black cursor-pointer"
               onClick={handleDislike}
             >
               <ThumbsDown
@@ -249,12 +254,12 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
           <Button
             variant="ghost"
             size="sm"
-            className={`bg-gray-100 hover:bg-gray-200 rounded-full text-black ${
+            className={`bg-gray-100 hover:bg-gray-200 rounded-full text-black cursor-pointer ${
               isWatchLater ? "text-red-600 font-semibold" : ""
             }`}
             onClick={handleWatchLater}
           >
-            <Clock className="w-5 h-5 mr-2" />
+            <Clock className={`w-5 h-5 mr-2 ${isWatchLater ? "text-red-600 fill-red-600" : ""}`} />
             {isWatchLater ? "Saved" : "Watch Later"}
           </Button>
 
@@ -262,7 +267,7 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
           <Button
             variant="ghost"
             size="sm"
-            className="bg-gray-100 hover:bg-gray-200 rounded-full text-black"
+            className="bg-gray-100 hover:bg-gray-200 rounded-full text-black cursor-pointer"
             onClick={handleStartWatchParty}
           >
             <Users className="w-5 h-5 mr-2 text-blue-600" />
@@ -272,7 +277,7 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
           <Button
             variant="ghost"
             size="sm"
-            className="bg-gray-100 hover:bg-gray-200 rounded-full text-black"
+            className="bg-gray-100 hover:bg-gray-200 rounded-full text-black cursor-pointer"
           >
             <Share className="w-5 h-5 mr-2" />
             Share
@@ -292,7 +297,7 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
             <Button
               variant="ghost"
               size="sm"
-              className="bg-gray-100 hover:bg-gray-200 rounded-full text-black"
+              className="bg-gray-100 hover:bg-gray-200 rounded-full text-black cursor-pointer"
               onClick={handleDownload}
               disabled={downloading}
             >
@@ -304,7 +309,7 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
           <Button
             variant="ghost"
             size="icon"
-            className="bg-gray-100 hover:bg-gray-200 rounded-full text-black"
+            className="bg-gray-100 hover:bg-gray-200 rounded-full text-black cursor-pointer"
           >
             <MoreHorizontal className="w-5 h-5" />
           </Button>
@@ -334,7 +339,7 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
         <Button
           variant="ghost"
           size="sm"
-          className="mt-2 p-0 h-auto font-medium text-black hover:bg-transparent"
+          className="mt-2 p-0 h-auto font-medium text-black hover:bg-transparent cursor-pointer"
           onClick={() => setShowFullDescription(!showFullDescription)}
         >
           {showFullDescription ? "Show less" : "Show more"}
