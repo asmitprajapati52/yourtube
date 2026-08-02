@@ -1,36 +1,28 @@
 "use strict";
 import multer from "multer";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
-// ES Modules mein directory path set karne ka sahi absolute tarika
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// 🚀 Cloudinary Configuration
+// Ensure these environment variables are set in your Render dashboard / .env file
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-// Ekdum accurate automatic fallback path 'D:\youtube\server\uploads' ke liye
-const uploadDir = path.join(__dirname, "..", "uploads");
-
-// 🚀 automatic check: Agar folder purani directory ke hisab se missing hai, toh khud bana dega!
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-  console.log("🚀 Uploads directory created at:", uploadDir);
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir); // Absolute path dene se kabhi error nahi aayega
-  },
-  filename: (req, file, cb) => {
-    cb(
-      null,
-      new Date().toISOString().replace(/:/g, "-") + "-" + file.originalname
-    );
+// 🚀 Cloudinary Storage Engine Setup for Multer
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "yourtube_videos", // Cloudinary par is naam ka folder ban jayega
+    resource_type: "auto",     // Automatically detects video/image files
+    allowed_formats: ["mp4", "mov", "avi", "mkv", "webm", "m4v"],
   },
 });
 
 const filefilter = (req, file, cb) => {
-  // Sabhi major video types ko allow karne ke liye condition thodi broad kar di taaki crash na ho
+  // Sabhi major video types ko allow karne ke liye condition
   if (file.mimetype.startsWith("video/")) {
     cb(null, true);
   } else {

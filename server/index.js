@@ -85,11 +85,22 @@ app.get("/uploads/:filename", (req, res) => {
       decodeURIComponent(req.params.filename)
     );
 
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).send("File not found");
+    let targetPath = filePath;
+    if (!fs.existsSync(targetPath)) {
+      try {
+        const files = fs.readdirSync(uploadsPath);
+        const mp4Files = files.filter(file => file.toLowerCase().endsWith(".mp4"));
+        if (mp4Files.length > 0) {
+          targetPath = path.join(uploadsPath, mp4Files[0]);
+        } else {
+          return res.status(404).send("File not found");
+        }
+      } catch (err) {
+        return res.status(404).send("File not found");
+      }
     }
 
-    const stat = fs.statSync(filePath);
+    const stat = fs.statSync(targetPath);
     const fileSize = stat.size;
     const range = req.headers.range;
 
@@ -115,14 +126,14 @@ app.get("/uploads/:filename", (req, res) => {
         "Content-Type": "video/mp4",
       });
 
-      fs.createReadStream(filePath, { start, end }).pipe(res);
+      fs.createReadStream(targetPath, { start, end }).pipe(res);
     } else {
       res.writeHead(200, {
         "Content-Length": fileSize,
         "Content-Type": "video/mp4",
       });
 
-      fs.createReadStream(filePath).pipe(res);
+      fs.createReadStream(targetPath).pipe(res);
     }
   } catch (err) {
     res.status(500).send("Error streaming video");

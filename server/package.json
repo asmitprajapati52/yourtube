@@ -3,32 +3,34 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-"scripts": {
-  "start": "NODE_OPTIONS=--max-old-space-size=4096 node index.js",
-  "dev": "NODE_OPTIONS=--max-old-space-size=4096 nodemon index.js",
-  "test": "echo \"Error: no test specified\" && exit 1"
-},
+  "scripts": {
+    "start": "NODE_OPTIONS=--max-old-space-size=4096 node index.js",
+    "dev": "NODE_OPTIONS=--max-old-space-size=4096 nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
-  "body-parser": "^2.3.0",
-  "cors": "^2.8.6",
-  "dotenv": "^17.4.2",
-  "express": "^5.2.1",
-  "express-fileupload": "^1.5.2",
-  "fs": "^0.0.1-security",
-  "geoip-lite": "^2.0.3",
-  "jsonwebtoken": "^9.0.3",
-  "mongodb": "^7.4.0",
-  "mongoose": "^9.7.3",
-  "multer": "^2.2.0",
-  "nodemailer": "^9.0.3",
-  "razorpay": "^2.9.8",
-  "socket.io": "^4.8.3"
-},
-"devDependencies": {
-  "nodemon": "^3.1.14"
-}
+    "body-parser": "^2.3.0",
+    "cloudinary": "^1.41.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-fileupload": "^1.5.2",
+    "fs": "^0.0.1-security",
+    "geoip-lite": "^2.0.3",
+    "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.4.0",
+    "mongoose": "^9.7.3",
+    "multer": "^2.2.0",
+    "multer-storage-cloudinary": "^4.0.0",
+    "nodemailer": "^9.0.3",
+    "razorpay": "^2.9.8",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
 }
