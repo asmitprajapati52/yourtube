@@ -17,6 +17,8 @@ const downloadSchema = new mongoose.Schema({
   },
   planAtDownload: { 
     type: String, 
+    required: true,
+    lowercase: true,
     enum: ["free", "bronze", "Bronze", "silver", "gold", "platinum"], 
     default: "free" 
   }
