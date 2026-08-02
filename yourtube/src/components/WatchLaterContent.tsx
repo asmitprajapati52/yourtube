@@ -53,7 +53,6 @@ export default function WatchLaterContent() {
 
     try {
       setLoading(true);
-      // 🚀 Fixed endpoint to match your backend route: /watchlater/user/:userId
       const response = await axiosInstance.get(`/watchlater/user/${user._id}`);
       setWatchLater(response.data || []);
     } catch (error) {
@@ -64,10 +63,9 @@ export default function WatchLaterContent() {
     }
   };
 
-  const handleRemoveFromWatchLater = async (videoId: string, watchLaterRecordId: string) => {
+  const handleRemoveFromWatchLater = async (videoId?: string, watchLaterRecordId?: string) => {
     try {
-      if (!user?._id) return;
-      // Call your toggle/remove backend route
+      if (!user?._id || !videoId || !watchLaterRecordId) return;
       await axiosInstance.post(`/watchlater/video/${videoId}`, { userId: user._id });
       setWatchLater((prev) => prev.filter((item) => item._id !== watchLaterRecordId));
     } catch (error) {
@@ -141,7 +139,7 @@ export default function WatchLaterContent() {
                   {thumbnailUrl ? (
                     <img 
                       src={thumbnailUrl} 
-                      alt={video.videotitle} 
+                      alt={video.videotitle || "Video thumbnail"} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                     />
                   ) : (
@@ -184,7 +182,11 @@ export default function WatchLaterContent() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-white text-black border shadow-md">
                   <DropdownMenuItem
-                    onClick={() => handleRemoveFromWatchLater(video._id, item._id)}
+                    onClick={() => {
+                      if (video?._id && item?._id) {
+                        handleRemoveFromWatchLater(video._id, item._id);
+                      }
+                    }}
                     className="cursor-pointer text-red-600 font-semibold focus:text-red-700 focus:bg-red-50 flex items-center text-xs"
                   >
                     <X className="w-4 h-4 mr-2" />
