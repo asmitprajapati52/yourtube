@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import axiosInstance from "@/lib/axiosinstance";
 import { useUser } from "@/lib/AuthContext";
 import { formatDistanceToNow } from "date-fns";
-import { useRouter } from "next/navigation"; // 👈 Next.js router import karein
+import { useRouter } from "next/navigation";
 
 export default function DownloadsContent() {
   const [downloads, setDownloads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useUser();
-  const router = useRouter(); // 👈 Router initialize karein
+  const router = useRouter();
 
   useEffect(() => {
     const fetchDownloads = async () => {
@@ -28,6 +28,18 @@ export default function DownloadsContent() {
 
     fetchDownloads();
   }, [user?._id]);
+
+  const backendBaseUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
+
+  // 🚀 Helper function to get correct video source URL
+  const getVideoSrc = (video: any) => {
+    const filepath = video?.filepath || video?.videoPath || video?.url;
+    if (!filepath) return `${backendBaseUrl}/video/vdo.mp4`;
+    if (filepath.startsWith("http")) return filepath;
+    const filename = filepath.split(/[\\/]/).pop();
+    return `${backendBaseUrl}/uploads/${encodeURIComponent(filename || "")}`;
+  };
 
   if (loading) {
     return <div className="text-center py-10 text-gray-500">Loading your downloaded videos...</div>;
@@ -49,30 +61,41 @@ export default function DownloadsContent() {
             const video = item.videoId;
             if (!video) return null;
 
+            // Check all possible thumbnail property names from backend
+            const thumbnailUrl = 
+              video.thumbnail || 
+              video.videoThumbnail || 
+              video.poster || 
+              video.image;
+
             return (
               <div 
                 key={item._id} 
-                onClick={() => router.push(`/watch/${video._id}`)} // 👈 Click karne par watch page par redirect karega
+                onClick={() => router.push(`/watch/${video._id}`)}
                 className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm p-4 flex flex-col justify-between hover:shadow-md transition-shadow cursor-pointer group"
               >
                 <div>
-                  {/* Agar aapke paas thumbnail field hai toh yahan image dikha sakte hain */}
-                  <div className="w-full aspect-video bg-gray-100 rounded-lg mb-3 overflow-hidden flex items-center justify-center">
-                    {video.thumbnail || video.videoThumbnail ? (
+                  <div className="w-full aspect-video bg-gray-900 rounded-lg mb-3 overflow-hidden flex items-center justify-center relative">
+                    {thumbnailUrl ? (
                       <img 
-                        src={video.thumbnail || video.videoThumbnail} 
-                        alt={video.videotitle} 
+                        src={thumbnailUrl} 
+                        alt={video.videotitle || "Video thumbnail"} 
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
-                      <span className="text-xs text-gray-400">No Thumbnail</span>
+                      // 🚀 Fallback: Agar thumbnail nahi hai toh video ka pehla frame dikhane ke liye video tag use karein
+                      <video
+                        src={getVideoSrc(video)}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        preload="metadata"
+                      />
                     )}
                   </div>
 
                   <h3 className="font-semibold text-base text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                    {video.videotitle}
+                    {video.videotitle || video.title || "Untitled Video"}
                   </h3>
-                  <p className="text-xs text-gray-500 mt-1">Channel: {video.videochanel || "Unknown"}</p>
+                  <p className="text-xs text-gray-500 mt-1">Channel: {video.videochanel || video.channel || "Unknown"}</p>
                 </div>
 
                 <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center text-xs text-gray-400">
