@@ -1,5 +1,5 @@
 import Download from "../modals/download.js";
-import User from "../modals/Auth.js"; // Aapka existing user model
+import User from "../modals/Auth.js";
 
 // Plan ke hisaab se daily limit define karne ka function
 const getDownloadLimit = (plan) => {
@@ -11,15 +11,20 @@ const getDownloadLimit = (plan) => {
     case "silver":
       return 5;
     case "gold":
-      return 20; // Gold ke liye high ya unlimited
+      return 20;
     default:
-      return 1; // Default free limit
+      return 1;
   }
 };
 
 // 1. Video Download Check & Record karne ka API
 export const downloadVideo = async (req, res) => {
   const { userId, videoId } = req.body;
+
+  // 🚀 Safety check: Fields check karein
+  if (!userId || !videoId) {
+    return res.status(400).json({ message: "userId and videoId are required!" });
+  }
 
   try {
     // User ka current plan fetch karein
@@ -29,7 +34,7 @@ export const downloadVideo = async (req, res) => {
     const userPlan = user.subscriptionPlan || "free";
     const allowedLimit = getDownloadLimit(userPlan);
 
-    // Aaj ki date ki shuruat (Start of the day: 00:00:00) nikalna taaki daily count track ho sake
+    // Aaj ki date ki shuruat (Start of the day: 00:00:00)
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -46,20 +51,22 @@ export const downloadVideo = async (req, res) => {
       });
     }
 
-    // Agar limit ke andar hai, toh record save karein
+    // Record save karein
     const newDownload = await Download.create({
       userId,
       videoId,
       planAtDownload: userPlan,
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Video download authorized successfully!",
       download: newDownload,
       remainingDownloads: allowedLimit - (todayDownloadsCount + 1),
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // 🚀 Server console par error print karega taaki Render logs mein dikhe
+    console.error("Error in downloadVideo controller:", error);
+    return res.status(500).json({ message: error.message || "Internal Server Error" });
   }
 };
 
@@ -69,11 +76,12 @@ export const getUserDownloads = async (req, res) => {
 
   try {
     const downloads = await Download.find({ userId })
-      .populate("videoId") // Video ki saari details (title, thumbnail, etc.) sath mein mil jayengi
-      .sort({ downloadDate: -1 }); // Latest downloads sabse upar
+      .populate("videoId") 
+      .sort({ downloadDate: -1 });
 
-    res.status(200).json(downloads);
+    return res.status(200).json(downloads || []);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error in getUserDownloads controller:", error);
+    return res.status(500).json({ message: error.message || "Internal Server Error" });
   }
 };
