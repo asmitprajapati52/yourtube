@@ -5,12 +5,14 @@ import RelatedVideos from "@/components/RelatedVideos";
 import VideoInfo from "@/components/VideoInfo";
 import Videopplayer from "@/components/Videopplayer";
 import axiosInstance from "@/lib/axiosinstance";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 export default function WatchVideoPage() {
+  const params = useParams();
+  const id = params?.id as string; // ✅ App Router ka sahi tareeqa ID lene ka
   const router = useRouter();
-  const { id } = router.query;
+  
   const [currentVideo, setCurrentVideo] = useState<any>(null);
   const [allVideosList, setAllVideosList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +31,7 @@ export default function WatchVideoPage() {
 
   useEffect(() => {
     const fetchVideoDetails = async () => {
-      if (!id || typeof id !== "string") return;
+      if (!id) return;
       try {
         setLoading(true);
         const res = await axiosInstance.get("/video/getall");
@@ -45,10 +47,10 @@ export default function WatchVideoPage() {
       }
     };
     
-    if (router.isReady) {
+    if (id) {
       fetchVideoDetails();
     }
-  }, [id, router.isReady]);
+  }, [id]);
 
   if (loading) {
     return (
