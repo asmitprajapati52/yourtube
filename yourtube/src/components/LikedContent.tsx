@@ -23,6 +23,8 @@ export default function LikedVideosContent() {
   useEffect(() => {
     if (user) {
       loadLikedVideos();
+    } else {
+      setLoading(false);
     }
   }, [user]);
 
@@ -31,8 +33,11 @@ export default function LikedVideosContent() {
 
     try {
       const likedData = await axiosInstance.get(`/like/${user?._id}`);
-
-      setLikedVideos(likedData.data);
+      // 🚀 SAFETY FIX: Sirf wahi liked items rakho jinka videoid exist karta ho!
+      const validLikedVideos = (likedData.data || []).filter(
+        (item: any) => item && item.videoid != null
+      );
+      setLikedVideos(validLikedVideos);
     } catch (error) {
       console.error("Error loading liked videos:", error);
     } finally {
@@ -44,7 +49,7 @@ export default function LikedVideosContent() {
     if (!user) return;
 
     try {
-      console.log("Unliking video:", videoId, "for user:", user.id);
+      console.log("Unliking video:", videoId, "for user:", user._id);
       setLikedVideos(likedVideos.filter((item) => item._id !== likedVideoId));
     } catch (error) {
       console.error("Error unliking video:", error);
@@ -64,7 +69,7 @@ export default function LikedVideosContent() {
   }
 
   if (loading) {
-    return <div>Loading liked videos...</div>;
+    return <div className="text-white p-6">Loading liked videos...</div>;
   }
 
   if (likedVideos.length === 0) {
@@ -76,6 +81,7 @@ export default function LikedVideosContent() {
       </div>
     );
   }
+
   const backendBaseUrl =
     process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
 
@@ -97,56 +103,60 @@ export default function LikedVideosContent() {
       </div>
 
       <div className="space-y-4">
-        {likedVideos.map((item) => (
-          <div key={item._id} className="flex flex-col sm:flex-row gap-4 group">
-            <Link href={`/watch/${item.videoid._id}`} className="shrink-0 w-full sm:w-auto">
-              <div className="relative w-full sm:w-40 aspect-video bg-gray-100 rounded overflow-hidden">
-                <video
-                  src={getVideoSrc(item.videoid)}
-                  className="object-cover group-hover:scale-105 transition-transform duration-200"
-                />
-              </div>
-            </Link>
+        {likedVideos.map((item) => {
+          if (!item?.videoid) return null;
 
-            <div className="flex-1 min-w-0">
-              <Link href={`/watch/${item.videoid._id}`}>
-                <h3 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600 mb-1">
-                  {item.videoid.videotitle}
-                </h3>
+          return (
+            <div key={item._id} className="flex flex-col sm:flex-row gap-4 group">
+              <Link href={`/watch/${item.videoid._id}`} className="shrink-0 w-full sm:w-auto">
+                <div className="relative w-full sm:w-40 aspect-video bg-gray-100 rounded overflow-hidden">
+                  <video
+                    src={getVideoSrc(item.videoid)}
+                    className="object-cover group-hover:scale-105 transition-transform duration-200 w-full h-full"
+                  />
+                </div>
               </Link>
-              <p className="text-sm text-gray-600">
-                {item.videoid.videochanel}
-              </p>
-              <p className="text-sm text-gray-600">
-                {item.videoid.views.toLocaleString()} views •{" "}
-                {formatDistanceToNow(new Date(item.videoid.createdAt))} ago
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                Liked {formatDistanceToNow(new Date(item.createdAt))} ago
-              </p>
-            </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="opacity-0 group-hover:opacity-100"
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => handleUnlikeVideo(item.videoid._id, item._id)}
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  Remove from liked videos
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        ))}
+              <div className="flex-1 min-w-0">
+                <Link href={`/watch/${item.videoid._id}`}>
+                  <h3 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600 mb-1">
+                    {item.videoid.videotitle || "Untitled Video"}
+                  </h3>
+                </Link>
+                <p className="text-sm text-gray-600">
+                  {item.videoid.videochanel || "Unknown Channel"}
+                </p>
+                <p className="text-sm text-gray-600">
+                  {(item.videoid.views || 0).toLocaleString()} views •{" "}
+                  {item.videoid.createdAt ? formatDistanceToNow(new Date(item.videoid.createdAt)) : ""} ago
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Liked {item.createdAt ? formatDistanceToNow(new Date(item.createdAt)) : ""} ago
+                </p>
+              </div>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="opacity-0 group-hover:opacity-100"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => handleUnlikeVideo(item.videoid._id, item._id)}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Remove from liked videos
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
