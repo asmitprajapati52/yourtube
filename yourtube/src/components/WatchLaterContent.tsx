@@ -19,71 +19,55 @@ export default function WatchLaterContent() {
   const [loading, setLoading] = useState(true);
   const { user } = useUser();
   
-  // Production-ready backend URL with Render fallback
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
 
   useEffect(() => {
-    if (user) {
+    if (user?._id) {
       loadWatchLater();
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?._id]);
 
   const loadWatchLater = async () => {
-    if (!user) return;
+    if (!user?._id) return;
 
     try {
       setLoading(true);
-      const response = await axiosInstance.get("/video/getall");
-      
-      if (response && response.data) {
-        const localizedPlaylist = response.data.map((vid: any, idx: number) => ({
-          _id: vid._id || `wl-${idx}`,
-          createdAt: vid.createdAt || new Date().toISOString(),
-          videoid: {
-            _id: vid._id,
-            videotitle: vid.videotitle || "Saved Watch Later Clip",
-            videochanel: vid.videochanel || "CodingNinja",
-            views: vid.views || 0,
-            filepath: vid.filepath || "",
-            createdAt: vid.createdAt || new Date().toISOString()
-          }
-        }));
-        setWatchLater(localizedPlaylist);
-      } else {
-        setWatchLater([]);
-      }
+      // 🚀 Fixed endpoint to match your backend route: /watchlater/user/:userId
+      const response = await axiosInstance.get(`/watchlater/user/${user._id}`);
+      setWatchLater(response.data || []);
     } catch (error) {
-      console.log("Safeguarding against route 404: Using client-side template tracking stream");
+      console.error("Error loading watch later videos:", error);
       setWatchLater([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRemoveFromWatchLater = async (watchLaterId: string) => {
+  const handleRemoveFromWatchLater = async (videoId: string, watchLaterRecordId: string) => {
     try {
-      setWatchLater(watchLater.filter((item) => item._id !== watchLaterId));
+      if (!user?._id) return;
+      // Call your toggle/remove backend route
+      await axiosInstance.post(`/watchlater/video/${videoId}`, { userId: user._id });
+      setWatchLater(watchLater.filter((item) => item._id !== watchLaterRecordId));
     } catch (error) {
-      console.error("Error removing from playlist state:", error);
+      console.error("Error removing from watch later:", error);
     }
   };
 
-  const getVideoSrc = (filepath: string) => {
-    if (!filepath) return "";
-    let filename = filepath;
-    if (filename.includes("/") || filename.includes("\\")) {
-      const parts = filename.split(/[/\\]/);
-      filename = parts[parts.length - 1];
-    }
-    return `${backendUrl}/uploads/${filename}`;
+  const getVideoSrc = (video: any) => {
+    const filepath = video?.filepath || video?.videoPath;
+    if (!filepath) return `${backendUrl}/video/vdo.mp4`;
+    if (filepath.startsWith("http")) return filepath;
+    const filename = filepath.split(/[\\/]/).pop();
+    return `${backendUrl}/uploads/${encodeURIComponent(filename || "")}`;
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12 text-sm text-zinc-400 font-mono animate-pulse">
-        [Fetching dataset streams... resolving network handshakes]
+        Loading watch later videos...
       </div>
     );
   }
@@ -124,41 +108,48 @@ export default function WatchLaterContent() {
 
       <div className="space-y-4 pt-2">
         {watchLater.map((item) => {
-          if (!item?.videoid) return null;
+          const video = item.videoid;
+          if (!video) return null;
 
-          const videoUrl = getVideoSrc(item.videoid.filepath);
+          const thumbnailUrl = video.thumbnail || video.videoThumbnail || video.poster;
 
           return (
             <div key={item._id} className="flex flex-col sm:flex-row gap-4 group relative items-start hover:bg-zinc-50 p-2.5 rounded-xl transition-all border border-transparent hover:border-zinc-100">
-              <Link href={`/watch/${item.videoid._id}`} className="shrink-0 w-full sm:w-auto">
-                <div className="relative w-full sm:w-40 aspect-video bg-zinc-950 rounded-lg overflow-hidden border border-zinc-200 flex items-center justify-center text-zinc-600 group-hover:scale-102 transition-transform duration-200">
+              <Link href={`/watch/${video._id}`} className="shrink-0 w-full sm:w-auto">
+                <div className="relative w-full sm:w-40 aspect-video bg-zinc-900 rounded-lg overflow-hidden border border-zinc-200 flex items-center justify-center">
                   <Play className="w-6 h-6 text-white/80 absolute z-10 drop-shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" />
                   
-                  {videoUrl ? (
-                    <div className="w-full h-full bg-linear-to-b from-zinc-800 to-zinc-950 flex items-center justify-center text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                      HQ Preview
-                    </div>
+                  {thumbnailUrl ? (
+                    <img 
+                      src={thumbnailUrl} 
+                      alt={video.videotitle} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                    />
                   ) : (
-                    <div className="w-full h-full bg-zinc-900" />
+                    <video
+                      src={getVideoSrc(video)}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                      preload="metadata"
+                    />
                   )}
                 </div>
               </Link>
 
               <div className="flex-1 min-w-0 py-0.5">
-                <Link href={`/watch/${item.videoid._id}`}>
+                <Link href={`/watch/${video._id}`}>
                   <h3 className="font-bold text-sm line-clamp-2 group-hover:text-red-600 transition-colors mb-1 text-black leading-snug">
-                    {item.videoid.videotitle}
+                    {video.videotitle || video.title}
                   </h3>
                 </Link>
                 <p className="text-xs text-zinc-600 font-medium">
-                  {item.videoid.videochanel}
+                  {video.videochanel || video.channel || "Unknown"}
                 </p>
                 <p className="text-[11px] text-zinc-500 mt-0.5">
-                  {item.videoid.views?.toLocaleString()} views •{" "}
-                  {formatDistanceToNow(new Date(item.videoid.createdAt))} ago
+                  {(video.views || 0).toLocaleString()} views •{" "}
+                  {video.createdAt ? formatDistanceToNow(new Date(video.createdAt)) : ""} ago
                 </p>
                 <p className="text-[10px] text-zinc-400 mt-1 flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> Added recently
+                  <Clock className="w-3 h-3" /> Added {item.createdAt ? formatDistanceToNow(new Date(item.createdAt)) : "recently"} ago
                 </p>
               </div>
 
@@ -174,7 +165,7 @@ export default function WatchLaterContent() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-white text-black border shadow-md">
                   <DropdownMenuItem
-                    onClick={() => handleRemoveFromWatchLater(item._id)}
+                    onClick={() => handleRemoveFromWatchLater(video._id, item._id)}
                     className="cursor-pointer text-red-600 font-semibold focus:text-red-700 focus:bg-red-50 flex items-center text-xs"
                   >
                     <X className="w-4 h-4 mr-2" />
