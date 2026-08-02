@@ -15,11 +15,18 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
   // Next overlay state
   const [showNextOverlay, setShowNextOverlay] = useState(false);
 
-  // Dynamic backend base URL for production and local development
+  // Dynamic backend base URL for local fallback only
   const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://youtube-07v0.onrender.com";
 
   const getFullUrl = () => {
     if (!video?.filepath) return null;
+    
+    // 🚀 FIXED: Agar filepath pehle se hi Cloudinary ka full URL hai, toh seedha wahi return karo!
+    if (video.filepath.startsWith("http://") || video.filepath.startsWith("https://")) {
+      return video.filepath;
+    }
+
+    // Agar purana local path hai, tabhi render/uploads fallback use ho
     const filename = video.filepath.split(/[\\/]/).pop();
     return `${backendBaseUrl}/uploads/${encodeURIComponent(filename || "")}`;
   };
@@ -63,17 +70,36 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
     }
   };
 
+  // Play/Pause toggle handler to sync state perfectly
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        videoRef.current.play().then(() => {
+          setIsPlaying(true);
+        }).catch((err) => console.error("Playback error:", err));
+      }
+    }
+  };
+
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
 
-    const handleLoadedMetadata = () => setDuration(v.duration);
+    const handleLoadedMetadata = () => {
+      setDuration(v.duration);
+      setIsLoading(false);
+    };
     const handleTimeUpdate = () => setCurrentTime(v.currentTime);
     const handleWaiting = () => setIsLoading(true);
     const handlePlaying = () => {
       setIsLoading(false);
+      setIsPlaying(true);
       setShowNextOverlay(false);
     };
+    const handlePause = () => setIsPlaying(false);
     
     const handleEnded = () => {
       setIsPlaying(false);
@@ -84,6 +110,7 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
     v.addEventListener("timeupdate", handleTimeUpdate);
     v.addEventListener("waiting", handleWaiting);
     v.addEventListener("playing", handlePlaying);
+    v.addEventListener("pause", handlePause);
     v.addEventListener("ended", handleEnded);
 
     return () => {
@@ -91,9 +118,10 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
       v.removeEventListener("timeupdate", handleTimeUpdate);
       v.removeEventListener("waiting", handleWaiting);
       v.removeEventListener("playing", handlePlaying);
+      v.removeEventListener("pause", handlePause);
       v.removeEventListener("ended", handleEnded);
     };
-  }, []);
+  }, [videoSrc]);
 
   if (!videoSrc) return <div className="text-white p-4">Video not found</div>;
 
@@ -103,13 +131,12 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
         key={videoSrc}
         ref={videoRef} 
         src={videoSrc} 
-        className="w-full aspect-video" 
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
+        className="w-full aspect-video cursor-pointer" 
+        onClick={togglePlay}
         onError={handleVideoError}
       />
 
-      {isLoading && <Loader2 className="absolute inset-0 m-auto text-white animate-spin" size={48} />}
+      {isLoading && <Loader2 className="absolute inset-0 m-auto text-white animate-spin z-20" size={48} />}
 
       {/* YouTube Style Next Overlay */}
       {showNextOverlay && (
@@ -121,7 +148,13 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
             <SkipForward size={24} /> Play Next
           </button>
           <button 
-            onClick={() => videoRef.current?.play()} 
+            onClick={() => {
+              if (videoRef.current) {
+                videoRef.current.currentTime = 0;
+                videoRef.current.play();
+                setShowNextOverlay(false);
+              }
+            }} 
             className="mt-6 text-gray-300 hover:text-white transition-colors"
           >
             <RotateCcw size={20} className="inline mr-2" /> Replay
@@ -139,7 +172,7 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
           />
           <div className="flex items-center justify-between text-white">
             <div className="flex gap-4 items-center">
-              <button onClick={() => { isPlaying ? videoRef.current?.pause() : videoRef.current?.play(); }}>
+              <button onClick={togglePlay}>
                 {isPlaying ? <Pause size={20} /> : <Play size={20} />}
               </button>
               <button onClick={() => skip(-10)}><RotateCcw size={20} /></button>
