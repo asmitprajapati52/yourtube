@@ -144,7 +144,7 @@ app.get("/uploads/:filename", (req, res) => {
 app.use("/user", userroutes);
 app.use("/video", videoroutes);
 app.use("/like", likeroutes);
-app.use("/watch", watchlaterroutes);
+app.use("/watchlater", watchlaterroutes);
 app.use("/history", historyrroutes);
 app.use("/comment", commentroutes);
 app.use("/payment", paymentroutes);
