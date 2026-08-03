@@ -11,7 +11,9 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  }
+  },
+  connectionTimeout: 10000, // 10 seconds timeout
+  socketTimeout: 10000
 });
 
 // Helper: Get Location from IP
@@ -47,12 +49,13 @@ export const login = async (req, res) => {
 
     await users.findOneAndUpdate({ email }, { $set: { otp, otpExpires: expires } });
 
-    await transporter.sendMail({
+    // 🚀 Non-blocking email send taaki Render par timeout (500 error) na aaye
+    transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Security Alert: Login OTP Verification",
       text: `Your login OTP is: ${otp}. It will expire in 10 minutes.`
-    });
+    }).catch(err => console.error("Email sending failed in background:", err));
 
     return res.status(202).json({ message: "OTP sent to email", requiresOTP: true });
 
