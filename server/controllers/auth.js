@@ -49,13 +49,17 @@ export const login = async (req, res) => {
 
     await users.findOneAndUpdate({ email }, { $set: { otp, otpExpires: expires } });
 
-    // 🚀 Non-blocking email send taaki Render par timeout (500 error) na aaye
+    // 🚀 Non-blocking email send with success & detailed error logging for Render logs
     transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Security Alert: Login OTP Verification",
       text: `Your login OTP is: ${otp}. It will expire in 10 minutes.`
-    }).catch(err => console.error("Email sending failed in background:", err));
+    }).then(() => {
+      console.log("✅ Email sent successfully to:", email);
+    }).catch(err => {
+      console.error("❌ Email sending failed with details:", err);
+    });
 
     return res.status(202).json({ message: "OTP sent to email", requiresOTP: true });
 
