@@ -1,15 +1,10 @@
 import mongoose from "mongoose";
 import users from "../modals/Auth.js";
-import SibApiV3Sdk from '@getbrevo/brevo';
+import * as SibApiV3Sdk from '@getbrevo/brevo';
 import dotenv from "dotenv";
 import geoip from 'geoip-lite';
 
 dotenv.config();
-
-// Initialize Brevo API
-let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-let apiKey = apiInstance.authentications['apiKey'];
-apiKey.apiKey = process.env.BREVO_API_KEY;
 
 // Helper: Get Location from IP
 const getLocation = (ip) => {
@@ -42,7 +37,10 @@ export const login = async (req, res) => {
 
     await users.findOneAndUpdate({ email }, { $set: { otp, otpExpires: expires } });
 
-    // 🚀 Send Email using Brevo API
+    // 🚀 Send Email using Brevo API (Correct ES Module Initialization)
+    let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+    apiInstance.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+
     let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
     sendSmtpEmail.subject = "Security Alert: Login OTP Verification";
     sendSmtpEmail.htmlContent = `<p>Your login OTP is: <b>${otp}</b>. It will expire in 10 minutes.</p>`;
