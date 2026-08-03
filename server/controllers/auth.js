@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import users from "../modals/Auth.js";
-import * as SibApiV3Sdk from '@getbrevo/brevo';
 import dotenv from "dotenv";
 import geoip from 'geoip-lite';
 
@@ -37,21 +36,28 @@ export const login = async (req, res) => {
 
     await users.findOneAndUpdate({ email }, { $set: { otp, otpExpires: expires } });
 
-    // 🚀 Send Email using Brevo API (Correct ES Module Initialization)
-    let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-    apiInstance.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
-
-    let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-    sendSmtpEmail.subject = "Security Alert: Login OTP Verification";
-    sendSmtpEmail.htmlContent = `<p>Your login OTP is: <b>${otp}</b>. It will expire in 10 minutes.</p>`;
-    sendSmtpEmail.sender = { name: "YourTube", email: process.env.EMAIL_USER };
-    sendSmtpEmail.to = [{ email: email }];
-
-    apiInstance.sendTransacEmail(sendSmtpEmail).then(() => {
-      console.log("✅ Email sent successfully via Brevo to:", email);
-    }).catch(err => {
-      console.error("❌ Brevo email failed:", err);
+    // 🚀 Send Email using Brevo HTTP API (Direct & No Constructor Errors)
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        sender: { name: "YourTube", email: process.env.EMAIL_USER },
+        to: [{ email: email }],
+        subject: "Security Alert: Login OTP Verification",
+        htmlContent: `<p>Your login OTP is: <b>${otp}</b>. It will expire in 10 minutes.</p>`
+      })
     });
+
+    const data = await response.json();
+    if (!response.ok) {
+      console.error("❌ Brevo API failed:", data);
+    } else {
+      console.log("✅ Email sent successfully via Brevo API to:", email);
+    }
 
     return res.status(202).json({ message: "OTP sent to email", requiresOTP: true });
 
