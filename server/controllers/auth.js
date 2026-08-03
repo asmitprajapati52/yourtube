@@ -1,13 +1,15 @@
 import mongoose from "mongoose";
 import users from "../modals/Auth.js";
-import { Resend } from "resend";
+import * as SibApiV3Sdk from '@getbrevo/brevo';
 import dotenv from "dotenv";
 import geoip from 'geoip-lite';
 
 dotenv.config();
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Brevo API
+let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+let apiKey = apiInstance.authentications['apiKey'];
+apiKey.apiKey = process.env.BREVO_API_KEY;
 
 // Helper: Get Location from IP
 const getLocation = (ip) => {
@@ -40,16 +42,17 @@ export const login = async (req, res) => {
 
     await users.findOneAndUpdate({ email }, { $set: { otp, otpExpires: expires } });
 
-    // 🚀 Send Email using Resend API (Non-blocking)
-    resend.emails.send({
-      from: 'YourTube <onboarding@resend.dev>', // Resend ka default test domain, baad mein apna custom domain laga sakta hai
-      to: [email],
-      subject: 'Security Alert: Login OTP Verification',
-      text: `Your login OTP is: ${otp}. It will expire in 10 minutes.`
-    }).then(() => {
-      console.log("✅ Email sent successfully via Resend to:", email);
+    // 🚀 Send Email using Brevo API (Supports any user email without domain restriction)
+    let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+    sendSmtpEmail.subject = "Security Alert: Login OTP Verification";
+    sendSmtpEmail.htmlContent = `<p>Your login OTP is: <b>${otp}</b>. It will expire in 10 minutes.</p>`;
+    sendSmtpEmail.sender = { name: "YourTube", email: process.env.EMAIL_USER }; // Yahan apni koi bhi registered email daal sakta hai
+    sendSmtpEmail.to = [{ email: email }];
+
+    apiInstance.sendTransacEmail(sendSmtpEmail).then(() => {
+      console.log("✅ Email sent successfully via Brevo to:", email);
     }).catch(err => {
-      console.error("❌ Resend email failed:", err);
+      console.error("❌ Brevo email failed:", err);
     });
 
     return res.status(202).json({ message: "OTP sent to email", requiresOTP: true });
