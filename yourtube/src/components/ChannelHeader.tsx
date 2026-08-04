@@ -1,19 +1,22 @@
 import React, { useState } from "react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
+import { useNavigate } from "react-router-dom"; // Agar React Router use kar raha hai
 
 interface ChannelHeaderProps {
   channel: any;
   user: any;
-  isOwner?: boolean;        // Isse pata chalega ki logged-in banda hi owner hai
-  onUploadClick?: () => void; // Upload popup kholne ka dynamic state binder
+  isOwner?: boolean;
+  onUploadClick?: () => void;
+  onCustomizeClick?: () => void; // Customize channel ya edit profile kholne ke liye
 }
 
-const ChannelHeader = ({ channel, user, isOwner, onUploadClick }: ChannelHeaderProps) => {
+const ChannelHeader = ({ channel, user, isOwner, onUploadClick, onCustomizeClick }: ChannelHeaderProps) => {
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const navigate = useNavigate();
 
-  // 🚀 CRASH PROTECTION: Agar channelname undefined ho toh default name use hoga
-  const displayName = channel?.channelname || channel?.name || "CodingNings";
+  // 🚀 CRASH PROTECTION & Fallback fix
+  const displayName = channel?.channelname || channel?.name || user?.name || "My Channel";
   const fallbackLetter = displayName ? displayName[0].toUpperCase() : "Y";
   const uniqueHandle = displayName ? displayName.toLowerCase().replace(/\s+/g, "") : "channel";
 
@@ -37,14 +40,20 @@ const ChannelHeader = ({ channel, user, isOwner, onUploadClick }: ChannelHeaderP
             <div className="flex flex-wrap gap-4 text-sm text-gray-600">
               <span>@{uniqueHandle}</span>
             </div>
-            {channel?.description && (
+            {channel?.description ? (
               <p className="text-sm text-gray-700 max-w-2xl mt-2">
                 {channel?.description}
               </p>
+            ) : (
+              isOwner && (
+                <p className="text-sm text-gray-400 italic mt-2">
+                  No description added yet. Click "Customize Channel" to add one.
+                </p>
+              )
             )}
           </div>
 
-          {/* Buttons Area: Owner ko Upload/Customize dikhega, doosro ko Subscribe */}
+          {/* Buttons Area */}
           <div className="flex gap-2 w-full md:w-auto justify-end">
             {isOwner ? (
               <>
@@ -55,6 +64,7 @@ const ChannelHeader = ({ channel, user, isOwner, onUploadClick }: ChannelHeaderP
                   Upload Video
                 </Button>
                 <Button
+                  onClick={onCustomizeClick || (() => navigate("/edit-profile"))} // Customize page ya modal par le jayega
                   variant="outline"
                   className="rounded-full border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
@@ -62,7 +72,6 @@ const ChannelHeader = ({ channel, user, isOwner, onUploadClick }: ChannelHeaderP
                 </Button>
               </>
             ) : (
-              // Baki normal visitors ke liye subscribe button tabhi dikhega jab user logged in ho
               user && user?._id !== channel?.ownerId && (
                 <Button
                   onClick={() => setIsSubscribed(!isSubscribed)}

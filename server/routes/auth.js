@@ -1,5 +1,5 @@
 import express from "express";
-import { login, updateprofile, updateThemePreference, verifyOTP } from "../controllers/auth.js";
+import { login, updateprofile, updateThemePreference, verifyOTP, deleteChannel } from "../controllers/auth.js";
 
 const routes = express.Router();
 
@@ -14,5 +14,8 @@ routes.patch("/update/:id", updateprofile);
 
 // 4️⃣ Theme Preference Update Route
 routes.patch("/update-theme", updateThemePreference);
+
+// 5️⃣ Delete Channel/Account Route
+routes.delete("/delete/:id", deleteChannel);
 
 export default routes;

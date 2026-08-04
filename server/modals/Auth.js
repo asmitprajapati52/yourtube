@@ -6,7 +6,7 @@ const userschema = mongoose.Schema({
   channelname: { 
     type: String, 
     unique: true, 
-    sparse: true, // Blank/empty values ko unique index error se bachane ke liye
+    sparse: true, 
     default: "" 
   },
   description: { type: String },

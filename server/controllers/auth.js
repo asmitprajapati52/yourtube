@@ -107,11 +107,10 @@ export const updateprofile = async (req, res) => {
   }
 
   try {
-    // 🚀 Check karo ki kya yeh channel name pehle se kisi aur user ne le rakha hai
     if (channelname && channelname.trim() !== "") {
       const existingChannel = await users.findOne({ 
         channelname: { $regex: new RegExp(`^${channelname.trim()}$`, "i") }, 
-        _id: { $ne: _id } // Apni khud ki ID ko exclude karo
+        _id: { $ne: _id } 
       });
 
       if (existingChannel) {
@@ -143,5 +142,23 @@ export const updateThemePreference = async (req, res) => {
     return res.status(200).json(updatedUser);
   } catch (error) {
     return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+// 5️⃣ DELETE CHANNEL / ACCOUNT
+export const deleteChannel = async (req, res) => {
+  const { id: _id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(_id)) {
+    return res.status(400).json({ message: "Invalid user ID" });
+  }
+
+  try {
+    const deletedUser = await users.findByIdAndDelete(_id);
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res.status(200).json({ success: true, message: "Channel deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Something went wrong while deleting channel" });
   }
 };
