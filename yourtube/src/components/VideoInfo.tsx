@@ -30,9 +30,10 @@ interface VideoInfoProps {
     filePath?: string;
     videoUrl?: string;
   };
+  duration?: number; // Optional duration prop passed from player
 }
 
-const VideoInfo = ({ video }: VideoInfoProps) => {
+const VideoInfo = ({ video, duration = 0 }: VideoInfoProps) => {
   const router = useRouter();
   const [likes, setlikes] = useState(video?.Like || 0);
   const [dislikes, setDislikes] = useState(video?.Dislike || 0);
@@ -118,7 +119,6 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
     }
   };
 
-  // 🚀 Fixed Watch Later endpoint matching backend route: POST /watchlater/video/:videoId
   const handleWatchLater = async () => {
     if (!user || !video?._id) {
       alert("Please login to save videos to Watch Later");
@@ -128,7 +128,6 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
       const res = await axiosInstance.post(`/watchlater/video/${video._id}`, {
         userId: user?._id,
       });
-      // Backend returns { added: true/false }
       if (res.data.added !== undefined) {
         setIsWatchLater(res.data.added);
       } else {
@@ -182,7 +181,6 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
     }
   };
 
-  // 🚀 Robust Watch Party Handler using backendBaseUrl
   const handleStartWatchParty = () => {
     const randomRoomId = Math.random().toString(36).substring(2, 9);
     
@@ -200,6 +198,15 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
       pathname: `/watch-party/${randomRoomId}`,
       query: { videoUrl: fullVideoUrl }
     });
+  };
+
+  // Format duration helper to show video length in mins/secs
+  const formatDurationLength = (time: number) => {
+    if (!time || isNaN(time)) return null;
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    if (mins === 0) return `${secs} secs`;
+    return `${mins} min${mins > 1 ? "s" : ""} ${secs > 0 ? `${secs} sec${secs > 1 ? "s" : ""}` : ""}`;
   };
 
   return (
@@ -263,7 +270,6 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
             {isWatchLater ? "Saved" : "Watch Later"}
           </Button>
 
-          {/* 🚀 Watch Party Button */}
           <Button
             variant="ghost"
             size="sm"
@@ -317,18 +323,29 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
       </div>
 
       <div className="bg-gray-100 rounded-lg p-4">
-        <div className="flex gap-4 text-sm font-medium mb-2 text-gray-700">
+        <div className="flex gap-4 text-sm font-medium mb-2 text-gray-700 flex-wrap items-center">
           <span>{video?.views?.toLocaleString() || 0} views</span>
+          {duration > 0 && (
+            <>
+              <span>•</span>
+              <span className="bg-gray-200 px-2 py-0.5 rounded text-xs text-gray-800 font-semibold">
+                {formatDurationLength(duration)}
+              </span>
+            </>
+          )}
           {video?.createdAt && (
-            <span>
-              {(() => {
-                try {
-                  return `${formatDistanceToNow(new Date(video.createdAt))} ago`;
-                } catch (e) {
-                  return "Recently";
-                }
-              })()}
-            </span>
+            <>
+              <span>•</span>
+              <span>
+                {(() => {
+                  try {
+                    return `${formatDistanceToNow(new Date(video.createdAt))} ago`;
+                  } catch (e) {
+                    return "Recently";
+                  }
+                })()}
+              </span>
+            </>
           )}
         </div>
         <div className={`text-sm text-gray-800 ${showFullDescription ? "" : "line-clamp-3"}`}>

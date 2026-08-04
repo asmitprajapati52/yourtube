@@ -3,7 +3,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, RotateCw, Loader2, SkipForward } from "lucide-react";
 
-export default function Videopplayer({ video, onNext }: { video: any, onNext?: () => void }) {
+export default function Videopplayer({ video, onNext, onDurationChange }: { video: any, onNext?: () => void, onDurationChange?: (duration: number) => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -21,7 +21,7 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
   const getFullUrl = () => {
     if (!video?.filepath) return null;
     
-    // 🚀 FIXED: Agar filepath pehle se hi Cloudinary ka full URL hai, toh seedha wahi return karo!
+    // Agar filepath pehle se hi Cloudinary ka full URL hai, toh seedha wahi return karo!
     if (video.filepath.startsWith("http://") || video.filepath.startsWith("https://")) {
       return video.filepath;
     }
@@ -91,6 +91,9 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
     const handleLoadedMetadata = () => {
       setDuration(v.duration);
       setIsLoading(false);
+      if (onDurationChange) {
+        onDurationChange(v.duration);
+      }
     };
     const handleTimeUpdate = () => setCurrentTime(v.currentTime);
     const handleWaiting = () => setIsLoading(true);
@@ -121,7 +124,7 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
       v.removeEventListener("pause", handlePause);
       v.removeEventListener("ended", handleEnded);
     };
-  }, [videoSrc]);
+  }, [videoSrc, onDurationChange]);
 
   if (!videoSrc) return <div className="text-white p-4">Video not found</div>;
 
