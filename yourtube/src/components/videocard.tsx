@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback } from "./ui/avatar";
@@ -22,6 +22,8 @@ export default function VideoCard({ video }: VideoCardProps) {
   };
 
   const [videoSrc, setVideoSrc] = useState<string>("");
+  const [duration, setDuration] = useState<number | null>(null);
+  const hiddenVideoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     setVideoSrc(getVideoSrc());
@@ -34,6 +36,13 @@ export default function VideoCard({ video }: VideoCardProps) {
     }
   };
 
+  const formatDuration = (time: number) => {
+    if (isNaN(time)) return "0:00";
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
+
   const views = video?.views ?? 0;
   const createdAt = video?.createdAt ? new Date(video.createdAt) : new Date();
   const channelInitial = video?.videochanel?.[0] ?? "C";
@@ -42,13 +51,26 @@ export default function VideoCard({ video }: VideoCardProps) {
     <Link href={`/watch/${video._id}`} className="group">
       <div className="space-y-3">
         <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+          {/* Hidden video element to extract exact metadata duration automatically */}
+          {videoSrc && (
+            <video
+              ref={hiddenVideoRef}
+              src={videoSrc}
+              preload="metadata"
+              onLoadedMetadata={(e) => {
+                setDuration(e.currentTarget.duration);
+              }}
+              className="hidden"
+            />
+          )}
+
           <video
             src={videoSrc}
             onError={handleVideoError}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
           />
-          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 rounded">
-            10:24
+          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded font-medium">
+            {duration ? formatDuration(duration) : "0:00"}
           </div>
         </div>
         <div className="flex gap-3">
