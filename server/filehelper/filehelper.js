@@ -10,14 +10,13 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// 🚀 Cloudinary Storage Engine Setup
+// 🚀 Cloudinary Storage Engine Setup with fixed parameters
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => {
     return {
       folder: "yourtube_videos",
       resource_type: "auto",
-      allowed_formats: ["mp4", "mov", "avi", "mkv", "webm", "m4v"],
       public_id: `video_${Date.now()}_${file.originalname.split(".")[0]}`
     };
   },
