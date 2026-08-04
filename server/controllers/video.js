@@ -1,7 +1,9 @@
 import video from "../modals/video.js";
+import { v2 as cloudinary } from "cloudinary";
+import streamifier from "streamifier";
 
 // ==========================================
-// 1. UPLOAD VIDEO CONTROLLER (Cloudinary Enabled - Safe JSON Response)
+// 1. UPLOAD VIDEO CONTROLLER (Memory Storage Stream Buffer)
 // ==========================================
 export const uploadvideo = async (req, res) => {
   try {
@@ -9,13 +11,29 @@ export const uploadvideo = async (req, res) => {
       return res.status(400).json({ success: false, error: "Please upload a valid video file only" });
     }
 
-    const videoUrl = req.file.path || req.file.secure_url; 
-    const fileName = req.file.filename || req.file.public_id || req.file.originalname || "video";
+    // 🚀 Stream buffer upload to Cloudinary directly (Prevents signature mismatch errors)
+    const streamUpload = (req) => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "yourtube_videos", resource_type: "auto" },
+          (error, result) => {
+            if (result) {
+              resolve(result);
+            } else {
+              reject(error);
+            }
+          }
+        );
+        streamifier.createReadStream(req.file.buffer).pipe(stream);
+      });
+    };
+
+    const result = await streamUpload(req);
 
     const newVideo = new video({
       videotitle: req.body.videotitle || "Untitled Video",
-      filename: fileName,
-      filepath: videoUrl,
+      filename: result.public_id || req.file.originalname,
+      filepath: result.secure_url,
       filetype: req.file.mimetype || "video/mp4",
       filesize: req.file.size ? `${(req.file.size / (1024 * 1024)).toFixed(2)} MB` : "Unknown",
       videochanel: req.body.videochanel || "Anonymous Channel",
@@ -25,8 +43,7 @@ export const uploadvideo = async (req, res) => {
     await newVideo.save();
     return res.status(201).json({ success: true, message: "File uploaded successfully", video: newVideo });
   } catch (error) {
-    console.error("❌ Cloudinary/DB Upload Error:", error.message || error);
-    // 🚀 HAMESHA JSON RETURN KAREGA, KABHI HTML NAHI FEKEGA!
+    console.error("❌ Cloudinary Buffer Upload Error:", error.message || error);
     return res.status(500).json({ 
       success: false, 
       error: error.message || "Failed to upload video to cloud storage." 

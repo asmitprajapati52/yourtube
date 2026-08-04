@@ -1,7 +1,6 @@
 "use strict";
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 // 🚀 Cloudinary Configuration
 cloudinary.config({
@@ -10,17 +9,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// 🚀 Cloudinary Storage Engine Setup with fixed parameters
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: async (req, file) => {
-    return {
-      folder: "yourtube_videos",
-      resource_type: "auto",
-      public_id: `video_${Date.now()}_${file.originalname.split(".")[0]}`
-    };
-  },
-});
+// 🚀 Use Memory Storage to avoid signature/disk path issues on Render
+const storage = multer.memoryStorage();
 
 const filefilter = (req, file, cb) => {
   if (file.mimetype && file.mimetype.startsWith("video/")) {
