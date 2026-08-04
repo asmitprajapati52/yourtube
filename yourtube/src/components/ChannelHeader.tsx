@@ -1,21 +1,20 @@
 import React, { useState } from "react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { useNavigate } from "react-router-dom"; // Agar React Router use kar raha hai
+import { useRouter } from "next/navigation"; // 🚀 Next.js ka standard router import kiya
 
 interface ChannelHeaderProps {
   channel: any;
   user: any;
   isOwner?: boolean;
   onUploadClick?: () => void;
-  onCustomizeClick?: () => void; // Customize channel ya edit profile kholne ke liye
+  onCustomizeClick?: () => void;
 }
 
 const ChannelHeader = ({ channel, user, isOwner, onUploadClick, onCustomizeClick }: ChannelHeaderProps) => {
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const navigate = useNavigate();
+  const router = useRouter(); // 🚀 Next.js router hook
 
-  // 🚀 CRASH PROTECTION & Fallback fix
   const displayName = channel?.channelname || channel?.name || user?.name || "My Channel";
   const fallbackLetter = displayName ? displayName[0].toUpperCase() : "Y";
   const uniqueHandle = displayName ? displayName.toLowerCase().replace(/\s+/g, "") : "channel";
@@ -64,7 +63,7 @@ const ChannelHeader = ({ channel, user, isOwner, onUploadClick, onCustomizeClick
                   Upload Video
                 </Button>
                 <Button
-                  onClick={onCustomizeClick || (() => navigate("/edit-profile"))} // Customize page ya modal par le jayega
+                  onClick={onCustomizeClick || (() => router.push("/edit-profile"))} // Next.js router.push use kiya
                   variant="outline"
                   className="rounded-full border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
