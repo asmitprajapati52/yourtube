@@ -37,7 +37,7 @@ const allowedOrigins = [
   "http://localhost:3000"
 ];
 
-// Express CORS Setup with credentials support (PATCH added here ✅)
+// Express CORS Setup with credentials support
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -109,7 +109,6 @@ app.get("/uploads/:filename", (req, res) => {
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
 
-      // Handle invalid range requests to prevent 416 crash
       if (start >= fileSize || end >= fileSize) {
         res.writeHead(416, {
           "Content-Range": `bytes */${fileSize}`
@@ -154,6 +153,17 @@ app.get("/", (req, res) => {
   res.send("YouTube backend is running!");
 });
 
+// ==========================================
+// 🚀 GLOBAL ERROR-HANDLING MIDDLEWARE
+// ==========================================
+app.use((err, req, res, next) => {
+  console.error("❌ Global Crash Caught:", err.message || err);
+  return res.status(err.status || 500).json({
+    success: false,
+    error: err.message || "Internal Server Error during file processing."
+  });
+});
+
 // Socket.io Events
 io.on("connection", (socket) => {
   console.log(`⚡ User connected: ${socket.id}`);
@@ -188,12 +198,11 @@ io.on("connection", (socket) => {
   });
 });
 
-// ✅ 1. Pehle Server ko PORT par listen karao
+// Server Listen & DB Connection
 server.listen(PORT, () => {
   console.log(`🚀 Server with Socket.io running on port ${PORT}`);
 });
 
-// ✅ 2. Phir Background mein Database connect karo
 mongoose
   .connect(DBURL)
   .then(() => {
