@@ -6,26 +6,30 @@ import ChannelVideos from "@/components/ChannelVideos";
 import { VideoUploader } from "@/components/VideoUploader";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
-import { toast } from "sonner";
 
 export default function ChannelPage() {
   const router = useRouter();
   const { id } = router.query;
-  const { user } = useUser();
+  const { user, loading: authLoading } = useUser(); // Assuming AuthContext mein loading state bhi hai
   const [channelData, setChannelData] = useState<any>(null);
   const [videos, setVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("home");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  
-  // 🚀 Hydration Safety Control Trigger
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // 🚀 NAVIGATION FORCE LOCK: Kisi bhi naye page navigation trigger par popup close state verify karega
+  // 🚀 ROUTE PROTECTION: Agar user logged in nahi hai, toh login page par bhej do
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      router.push("/login"); // Ya home page "/" par redirect kar sakte ho
+    }
+  }, [user, authLoading, router]);
+
   useEffect(() => {
     const handleRouteChange = () => {
       setIsUploadOpen(false);
@@ -38,7 +42,7 @@ export default function ChannelPage() {
   }, [router]);
 
   useEffect(() => {
-    if (!router.isReady || !id) return;
+    if (!router.isReady || !id || !user) return;
 
     const fetchChannelDetails = async () => {
       try {
@@ -49,14 +53,7 @@ export default function ChannelPage() {
         setChannelData(channelRes.data);
       } catch (error: any) {
         console.error("Error fetching channel data:", error);
-        // Fallback production backup state block
-        setChannelData({
-          _id: id,
-          channelname: "CodingNings",
-          description: "Welcome to my development channel!",
-          ownerId: id,
-          subscribers: "125K"
-        });
+        setChannelData(null); // Fallback data hata diya taaki fake channel na dikhe
       }
 
       try {
@@ -72,9 +69,14 @@ export default function ChannelPage() {
     };
 
     fetchChannelDetails();
-  }, [id, router.isReady]);
+  }, [id, router.isReady, user]);
 
-  if (!isMounted) {
+  if (!isMounted || authLoading) {
+    return null;
+  }
+
+  // Agar user logged in nahi hai toh kuch render mat karo (redirect ho raha hoga)
+  if (!user) {
     return null;
   }
 
@@ -87,12 +89,11 @@ export default function ChannelPage() {
     );
   }
 
-  const currentChannel = channelData || { channelname: "CodingNings", _id: id };
+  const currentChannel = channelData;
   const isOwner = user?._id === currentChannel?.ownerId || user?.channelId === id;
 
   return (
     <div className="min-h-screen bg-white text-black">
-      {/* Banner & Header Component Sync hooks mapping */}
       <ChannelHeader 
         channel={currentChannel} 
         user={user}
@@ -103,7 +104,6 @@ export default function ChannelPage() {
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         <Channeltabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {/* Videos Grid Layout Handler */}
         {activeTab === "videos" || activeTab === "home" ? (
           <ChannelVideos videos={videos} />
         ) : (
@@ -113,7 +113,6 @@ export default function ChannelPage() {
         )}
       </div>
 
-      {/* Floating Video Uploader Overlay Modal */}
       {isUploadOpen && (
         <VideoUploader 
           channelId={id as string} 
