@@ -11,16 +11,17 @@ export const uploadvideo = async (req, res) => {
   }
 
   try {
-    const videoUrl = req.file.path; 
+    const videoUrl = req.file.path || req.file.secure_url; 
+    const fileName = req.file.filename || req.file.public_id || req.file.originalname || "video";
 
     const newVideo = new video({
-      videotitle: req.body.videotitle,
-      filename: req.file.filename || req.file.originalname,
+      videotitle: req.body.videotitle || "Untitled Video",
+      filename: fileName,
       filepath: videoUrl,
-      filetype: req.file.mimetype,
+      filetype: req.file.mimetype || "video/mp4",
       filesize: req.file.size ? `${(req.file.size / (1024 * 1024)).toFixed(2)} MB` : "Unknown",
-      videochanel: req.body.videochanel,
-      uploader: req.body.uploader,
+      videochanel: req.body.videochanel || "Anonymous Channel",
+      uploader: req.body.uploader || "",
     });
     
     await newVideo.save();
