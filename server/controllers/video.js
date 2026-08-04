@@ -26,7 +26,7 @@ export const uploadvideo = async (req, res) => {
     await newVideo.save();
     return res.status(201).json({ message: "File uploaded successfully", video: newVideo });
   } catch (error) {
-    console.error("❌ Cloudinary Upload error:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    console.error("❌ Cloudinary Upload error message: " + (error.message || JSON.stringify(error)));
     return res.status(500).json({ error: error.message || "Failed to upload video to cloud storage." });
   }
 };
@@ -39,7 +39,7 @@ export const getallvideo = async (req, res) => {
     const files = await video.find().sort({ createdAt: -1 });
     return res.status(200).json(files);
   } catch (error) {
-    console.error("❌ DB Fetch failed:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    console.error("❌ DB Fetch failed message: " + (error.message || JSON.stringify(error)));
     return res.status(500).json({ message: "Error fetching videos" });
   }
 };
@@ -53,7 +53,7 @@ export const getvideosbychannel = async (req, res) => {
     const channelVideos = await video.find({ uploader: id }).sort({ createdAt: -1 });
     return res.status(200).json(channelVideos);
   } catch (error) {
-    console.error("❌ Channel Videos Fetch failed:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    console.error("❌ Channel Videos Fetch failed message: " + (error.message || JSON.stringify(error)));
     return res.status(500).json({ message: "Error fetching channel videos" });
   }
 };
