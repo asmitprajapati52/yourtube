@@ -1,6 +1,7 @@
 import express from "express";
 import { getallvideo, uploadvideo, getvideosbychannel, streamVideoFile } from "../controllers/video.js";
-import upload from "../filehelper/filehelper.js";
+// 🚀 FIXED: Make sure this points to your Cloudinary multer configuration file
+import upload from "../middlewares/upload.js"; 
 
 const routes = express.Router();
 
@@ -13,8 +14,7 @@ routes.get("/getall", getallvideo);
 // 3. Specific Channel Videos Endpoint
 routes.get("/channel/:id", getvideosbychannel);
 
-// 🚀 FIXED PATH MATCHING: Frontend se jab '/video/uploads/vdo.mp4' ya '/video/vdo.mp4' hit hoga,
-// toh ye seedhe hamare high-performance custom stream controller ko call karega!
+// 🚀 Stream Controller Fallback
 routes.get("/uploads/:filename", streamVideoFile);
 routes.get("/vdo.mp4", streamVideoFile);
 
