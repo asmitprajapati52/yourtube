@@ -110,3 +110,23 @@ export const generateSignature = async (req, res) => {
 export const streamVideoFile = async (req, res) => {
   return res.status(410).json({ success: false, message: "Local streaming is deprecated. Videos are now served via Cloudinary URLs." });
 };
+
+// ==========================================
+// 6. GET CHANNEL DETAILS CONTROLLER (NEW)
+// ==========================================
+export const getchanneldetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const channelVideos = await video.find({ uploader: id });
+    
+    return res.status(200).json({
+      success: true,
+      channelId: id,
+      channelname: channelVideos.length > 0 ? channelVideos[0].videochanel : "User Channel",
+      totalVideos: channelVideos.length,
+    });
+  } catch (error) {
+    console.error("❌ Channel Details Fetch Error:", error.message);
+    return res.status(500).json({ success: false, message: "Error fetching channel details" });
+  }
+};
