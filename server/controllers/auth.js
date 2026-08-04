@@ -22,10 +22,14 @@ export const login = async (req, res) => {
     let existingUser = await users.findOne({ email });
 
     if (!existingUser) {
+      // 🚀 Naye user ke liye channelname aur description blank rakhe gaye hain
+      // taaki woh automatic pre-fill na ho aur user khud custom name/description daal sake.
       existingUser = await users.create({ 
         email, 
         name, 
         image, 
+        channelname: "", 
+        description: "", 
         lastIp: currentIp, 
         lastLocation: currentLocation 
       });
