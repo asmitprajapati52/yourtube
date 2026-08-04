@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/upload", upload.single("file"), uploadvideo);
 router.get("/getvideo", getallvideo);
 
-// 🚀 Frontend compatibility ke liye dono routes handle kar diye hain
+// 🚀 Channel routes (Handles both patterns to avoid 404)
 router.get("/getvideobychannel/:id", getvideosbychannel);
 router.get("/channel/:id", getvideosbychannel);
 
