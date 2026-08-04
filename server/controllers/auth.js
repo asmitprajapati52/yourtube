@@ -22,8 +22,6 @@ export const login = async (req, res) => {
     let existingUser = await users.findOne({ email });
 
     if (!existingUser) {
-      // 🚀 Naye user ke liye channelname aur description blank rakhe gaye hain
-      // taaki woh automatic pre-fill na ho aur user khud custom name/description daal sake.
       existingUser = await users.create({ 
         email, 
         name, 
@@ -40,7 +38,7 @@ export const login = async (req, res) => {
 
     await users.findOneAndUpdate({ email }, { $set: { otp, otpExpires: expires } });
 
-    // 🚀 Send Email using Brevo HTTP API (Direct & No Constructor Errors)
+    // 🚀 Send Email using Brevo HTTP API
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
@@ -99,15 +97,39 @@ export const verifyOTP = async (req, res) => {
   }
 };
 
-// 3️⃣ UPDATE PROFILE
+// 3️⃣ UPDATE PROFILE (With Duplicate Channel Name Prevention)
 export const updateprofile = async (req, res) => {
   const { id: _id } = req.params;
   const { channelname, description } = req.body;
-  if (!mongoose.Types.ObjectId.isValid(_id)) return res.status(500).json({ message: "User unavailable" });
+  
+  if (!mongoose.Types.ObjectId.isValid(_id)) {
+    return res.status(500).json({ message: "User unavailable" });
+  }
+
   try {
-    const updatedata = await users.findByIdAndUpdate(_id, { $set: { channelname, description } }, { returnDocument: 'after' });
+    // 🚀 Check karo ki kya yeh channel name pehle se kisi aur user ne le rakha hai
+    if (channelname && channelname.trim() !== "") {
+      const existingChannel = await users.findOne({ 
+        channelname: { $regex: new RegExp(`^${channelname.trim()}$`, "i") }, 
+        _id: { $ne: _id } // Apni khud ki ID ko exclude karo
+      });
+
+      if (existingChannel) {
+        return res.status(400).json({ message: "This channel name is already taken! Please choose another one." });
+      }
+    }
+
+    const updatedata = await users.findByIdAndUpdate(
+      _id, 
+      { $set: { channelname: channelname ? channelname.trim() : "", description } }, 
+      { returnDocument: 'after' }
+    );
+    
     return res.status(201).json(updatedata);
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "Channel name already exists!" });
+    }
     return res.status(500).json({ message: "Something went wrong" });
   }
 };

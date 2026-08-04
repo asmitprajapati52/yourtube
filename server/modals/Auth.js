@@ -3,7 +3,12 @@ import mongoose from "mongoose";
 const userschema = mongoose.Schema({
   email: { type: String, required: true },
   name: { type: String },
-  channelname: { type: String },
+  channelname: { 
+    type: String, 
+    unique: true, 
+    sparse: true, // Blank/empty values ko unique index error se bachane ke liye
+    default: "" 
+  },
   description: { type: String },
   image: { type: String },
   joinedon: { type: Date, default: Date.now },
@@ -16,8 +21,7 @@ const userschema = mongoose.Schema({
   lastLocation: { type: String, default: "" }, 
   otp: { type: String },
   otpExpires: { type: Date },
-  // Naye Subscription Fields added here:
-  subscriptionPlan: { type: String, default: "Free" }, // "Free", "Bronze", "Silver", "Gold"
+  subscriptionPlan: { type: String, default: "Free" },
   isPremium: { type: Boolean, default: false },
   subscriptionDate: { type: Date }
 });
