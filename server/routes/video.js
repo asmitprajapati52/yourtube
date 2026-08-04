@@ -1,34 +1,15 @@
 import express from "express";
-import { getallvideo, uploadvideo, getvideosbychannel, streamVideoFile } from "../controllers/video.js";
+import { uploadvideo, getallvideo, getvideosbychannel, streamVideoFile, generateSignature } from "../controllers/video.js";
+import upload from "../filehelper/filehelper.js";
 
-// 🚀 Yahan check kar: agar teri file filehelper folder mein hai, toh yahi likhna hai:
-import upload from "../filehelper/filehelper.js"; 
+const router = express.Router();
 
-const routes = express.Router();
+router.post("/upload", upload.single("file"), uploadvideo);
+router.get("/getvideo", getallvideo);
+router.get("/getvideobychannel/:id", getvideosbychannel);
+router.get("/stream/:filename", streamVideoFile);
 
-// 1. Video Upload Endpoint
-routes.post("/upload", upload.single("file"), uploadvideo);
+// 🚀 Naya Signature Route for Frontend Direct Upload
+router.get("/get-signature", generateSignature);
 
-// 2. Home Page Videos Endpoint
-routes.get("/getall", getallvideo);
-
-// 3. Specific Channel Videos Endpoint
-routes.get("/channel/:id", getvideosbychannel);
-
-// Stream Endpoints
-routes.get("/uploads/:filename", streamVideoFile);
-routes.get("/vdo.mp4", streamVideoFile);
-
-// 4. Channel Metadata Fallback Endpoint
-routes.get("/details/:id", (req, res) => {
-  const { id } = req.params;
-  return res.status(200).json({
-    _id: id,
-    channelname: "CodingNings",
-    description: "Welcome to my official customized developer channel!",
-    subscribers: "125K",
-    ownerId: id 
-  });
-});
-
-export default routes;
+export default router;
