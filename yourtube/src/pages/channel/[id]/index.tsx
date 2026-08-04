@@ -10,7 +10,7 @@ import axiosInstance from "@/lib/axiosinstance";
 export default function ChannelPage() {
   const router = useRouter();
   const { id } = router.query;
-  const { user, loading: authLoading } = useUser(); // Assuming AuthContext mein loading state bhi hai
+  const { user, loading: authLoading } = useUser();
   const [channelData, setChannelData] = useState<any>(null);
   const [videos, setVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,11 +22,11 @@ export default function ChannelPage() {
     setIsMounted(true);
   }, []);
 
-  // 🚀 ROUTE PROTECTION: Agar user logged in nahi hai, toh login page par bhej do
+  // 🚀 ROUTE PROTECTION: Agar user logged in nahi hai, toh home page par redirect kar do
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      router.push("/login"); // Ya home page "/" par redirect kar sakte ho
+      router.push("/"); 
     }
   }, [user, authLoading, router]);
 
@@ -53,7 +53,7 @@ export default function ChannelPage() {
         setChannelData(channelRes.data);
       } catch (error: any) {
         console.error("Error fetching channel data:", error);
-        setChannelData(null); // Fallback data hata diya taaki fake channel na dikhe
+        setChannelData(null);
       }
 
       try {
@@ -75,7 +75,6 @@ export default function ChannelPage() {
     return null;
   }
 
-  // Agar user logged in nahi hai toh kuch render mat karo (redirect ho raha hoga)
   if (!user) {
     return null;
   }
