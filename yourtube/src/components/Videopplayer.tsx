@@ -162,9 +162,9 @@ export default function Videopplayer({ video, onNext }: { video: any, onNext?: (
         </div>
       )}
 
-      {/* Controls */}
+      {/* Controls - Always visible on mobile, hover on desktop */}
       {!showNextOverlay && (
-        <div className="absolute bottom-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-all z-30">
+        <div className="absolute bottom-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all z-30">
           <input 
             type="range" max={duration || 0} value={currentTime}
             onChange={(e) => { if(videoRef.current) videoRef.current.currentTime = Number(e.target.value); }}
