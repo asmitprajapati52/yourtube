@@ -99,17 +99,18 @@ export const UserProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseuser) => {
-      if (firebaseuser) {
-        const savedUser = localStorage.getItem("user");
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
-          applyThemeBasedOnTime();
-        }
+    // Page load / refresh hote hi localStorage se user uthao
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+        applyThemeBasedOnTime();
+      } catch (error) {
+        console.error("Failed to parse user from localStorage", error);
+        localStorage.removeItem("user");
       }
-      setAuthLoading(false);
-    });
-    return () => unsubscribe();
+    }
+    setAuthLoading(false);
   }, []);
 
   return (
