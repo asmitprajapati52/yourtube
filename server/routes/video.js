@@ -6,10 +6,12 @@ const router = express.Router();
 
 router.post("/upload", upload.single("file"), uploadvideo);
 router.get("/getvideo", getallvideo);
-router.get("/getvideobychannel/:id", getvideosbychannel);
-router.get("/stream/:filename", streamVideoFile);
 
-// 🚀 Naya Signature Route for Frontend Direct Upload
+// 🚀 Frontend compatibility ke liye dono routes handle kar diye hain
+router.get("/getvideobychannel/:id", getvideosbychannel);
+router.get("/channel/:id", getvideosbychannel);
+
+router.get("/stream/:filename", streamVideoFile);
 router.get("/get-signature", generateSignature);
 
 export default router;
