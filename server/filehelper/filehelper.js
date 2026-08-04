@@ -10,7 +10,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// 🚀 Fixed Cloudinary Storage Engine Setup
+// 🚀 Cloudinary Storage Engine Setup
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => {
@@ -34,7 +34,7 @@ const filefilter = (req, file, cb) => {
 const upload = multer({ 
   storage: storage, 
   fileFilter: filefilter,
-  limits: { fileSize: 100 * 1024 * 1024 } 
+  limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
 });
 
 export default upload;
