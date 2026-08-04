@@ -51,7 +51,7 @@ export const VideoUploader = ({ channelId, channelName, isOpen = true, onClose }
 
   const handleCloseTrigger = (e?: React.MouseEvent) => {
     if (e) {
-      e.stopPropagation(); // Stop routing and state bubbling triggers
+      e.stopPropagation();
     }
     setVideoFile(null);
     setVideoTitle("");
@@ -67,7 +67,7 @@ export const VideoUploader = ({ channelId, channelName, isOpen = true, onClose }
   };
 
   const handleUpload = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Direct form submission isolation
+    e.stopPropagation();
     if (!videoFile || !videoTitle.trim()) {
       toast.error("Please provide file and title");
       return;
@@ -85,18 +85,24 @@ export const VideoUploader = ({ channelId, channelName, isOpen = true, onClose }
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        timeout: 120000, // 🚀 2 minutes timeout Render ke slow connection ke liye
         onUploadProgress: (progresEvent: any) => {
-          const progress = Math.round(
-            (progresEvent.loaded * 100) / progresEvent.total
-          );
-          setUploadProgress(progress);
+          if (progresEvent.total) {
+            const progress = Math.round(
+              (progresEvent.loaded * 100) / progresEvent.total
+            );
+            setUploadProgress(progress);
+          }
         },
       });
       toast.success("Upload successfully");
-      handleCloseTrigger();
-    } catch (error) {
-      console.error("Error uploading video:", error);
-      toast.error("There was an error uploading your video. Please try again.");
+      setUploadComplete(true);
+      setTimeout(() => {
+        handleCloseTrigger();
+      }, 1500);
+    } catch (error: any) {
+      console.error("Error uploading video:", error.response?.data || error.message);
+      toast.error(error.response?.data?.error || "Server error during video upload. Please try a smaller file.");
     } finally {
       setIsUploading(false);
     }
@@ -106,7 +112,6 @@ export const VideoUploader = ({ channelId, channelName, isOpen = true, onClose }
     <div 
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={(e) => {
-        // 🚀 BACKDROP OVERLAY CLOSING: Bahar click karne par safe close hoga
         e.stopPropagation();
         if (!isUploading) {
           handleCloseTrigger(e);
@@ -116,12 +121,9 @@ export const VideoUploader = ({ channelId, channelName, isOpen = true, onClose }
       <div 
         className="bg-white text-black rounded-xl shadow-2xl border p-6 max-w-md w-full relative z-[10000]"
         onClick={(e) => {
-          // 🚀 MODAL INSIDE ISOLATION: Modal ke andar click karne par overlay toggle handle nahi hoga
           e.stopPropagation();
         }}
       >
-        
-        {/* Close Button UI Node binding */}
         <button 
           onClick={(e) => handleCloseTrigger(e)}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors bg-gray-100 hover:bg-gray-200 p-1.5 rounded-full z-10 cursor-pointer"
