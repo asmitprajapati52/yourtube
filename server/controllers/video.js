@@ -11,7 +11,6 @@ export const uploadvideo = async (req, res) => {
       return res.status(400).json({ success: false, error: "Please upload a valid video file only" });
     }
 
-    // 🚀 Stream buffer upload to Cloudinary directly (Prevents signature mismatch errors)
     const streamUpload = (req) => {
       return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
@@ -79,7 +78,34 @@ export const getvideosbychannel = async (req, res) => {
 };
 
 // ==========================================
-// 4. STREAM CONTROLLER
+// 4. SIGNATURE GENERATOR
+// ==========================================
+export const generateSignature = async (req, res) => {
+  try {
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    const folder = "yourtube_videos";
+    
+    const signature = cloudinary.utils.api_sign_request(
+      { folder, timestamp },
+      process.env.CLOUDINARY_API_SECRET
+    );
+
+    return res.status(200).json({
+      success: true,
+      signature,
+      timestamp,
+      folder,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME
+    });
+  } catch (error) {
+    console.error("❌ Signature Generation Error:", error);
+    return res.status(500).json({ success: false, error: "Failed to generate signature" });
+  }
+};
+
+// ==========================================
+// 5. STREAM CONTROLLER
 // ==========================================
 export const streamVideoFile = async (req, res) => {
   return res.status(410).json({ success: false, message: "Local streaming is deprecated. Videos are now served via Cloudinary URLs." });
